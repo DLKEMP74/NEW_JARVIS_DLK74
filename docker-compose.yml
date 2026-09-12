@@ -1,16 +1,29 @@
 services:
-  # The AI Brain (Executes models)
+  # 1. Custom Sci-Fi HUD Dashboard
+  jarvis-hud:
+    image: nginx:alpine
+    container_name: jarvis-hud
+    restart: unless-stopped
+    ports:
+      - "8080:80"
+    volumes:
+      - ./index.html:/usr/share/nginx/html/index.html:ro
+
+  # 2. The AI Brain (Executes models)
   ollama:
     image: ollama/ollama:latest
     container_name: jarvis-engine
     restart: unless-stopped
     ports:
       - "11434:11434"
+    environment:
+      # Allows your custom HUD browser page to query Ollama directly
+      - OLLAMA_ORIGINS=*
     volumes:
       # Maps model storage directly to your Engine Drive
       - /mnt/agent_storage/models:/root/.ollama
 
-  # The AI Interface & Vector Storage
+  # 3. The Standard AI Interface & Vector Storage
   open-webui:
     image: ghcr.io/open-webui/open-webui:main
     container_name: jarvis-ui
