@@ -61,7 +61,6 @@
     .stat-box { font-size: 0.85rem; line-height: 1.6; }
     .stat-val { color: #fff; font-weight: bold; }
 
-    /* Central Chat Console */
     #chat-feed {
       flex: 1;
       overflow-y: auto;
@@ -85,10 +84,7 @@
       border-left: 2px solid var(--neon-cyan);
     }
 
-    .input-bar {
-      display: flex;
-      gap: 8px;
-    }
+    .input-bar { display: flex; gap: 8px; }
     input {
       flex: 1;
       background: rgba(0, 240, 255, 0.05);
@@ -108,39 +104,46 @@
       font-weight: bold;
     }
     button:hover { background: var(--neon-cyan); color: #000; }
+    button.listening { background: #ff0055; border-color: #ff0055; color: #fff; animation: pulse 1s infinite; }
+
+    @keyframes pulse {
+      0% { opacity: 1; }
+      50% { opacity: 0.5; }
+      100% { opacity: 1; }
+    }
   </style>
 </head>
 <body>
 
   <header>
-    <div class="hud-title">J.A.R.V.I.S. DLK74 // HUD</div>
-    <div class="status-badge">CORE: [ONLINE] // SECURE LINK ESTABLISHED</div>
+    <div class="hud-title">J.A.R.V.I.S. DLK74 // AUDIO MATRIX</div>
+    <div class="status-badge">AUDIO PROTOCOL: [ACTIVE] // AWAITING VOICE INPUT</div>
   </header>
 
   <main>
     <div class="panel">
-      <div class="panel-header">System Diagnostics</div>
+      <div class="panel-header">Audio Telemetry</div>
       <div class="stat-box">
-        <div>CORE TEMP: <span class="stat-val">42.8°C</span></div>
-        <div>POWER DRAW: <span class="stat-val">18.4 W</span></div>
-        <div>GPU/VPU: <span class="stat-val">INTEL UHD 630</span></div>
-        <div>RAM ALLOC: <span class="stat-val">32.0 GB ACTIVE</span></div>
+        <div>VOICE ENGINE: <span class="stat-val">SPEECH-API V2</span></div>
+        <div>INPUT LOCALE: <span class="stat-val">en-GB</span></div>
+        <div>SYNTHESIS: <span class="stat-val">AUTOSPEAK ENABLED</span></div>
       </div>
       <div class="panel-header">Storage Drives</div>
       <div class="stat-box">
-        <div>NVMe_01 (OS): <span class="stat-val">ONLINE</span></div>
-        <div>NVMe_02 (MODELS): <span class="stat-val">1TB MOUNTED</span></div>
-        <div>SATA_03 (MEMORY): <span class="stat-val">1TB READY</span></div>
+        <div>NVMe_01: <span class="stat-val">OS ONLINE</span></div>
+        <div>NVMe_02: <span class="stat-val">1TB MOUNTED</span></div>
+        <div>SATA_03: <span class="stat-val">1TB READY</span></div>
       </div>
     </div>
 
     <div class="panel">
       <div class="panel-header">Active Neural Stream // Ollama Llama3</div>
       <div id="chat-feed">
-        <div class="msg ai">SYSTEM READY. Neural link established with local Ollama engine.</div>
+        <div class="msg ai">SYSTEM READY. Neural audio interface initialized. Tap LISTEN or speak directly.</div>
       </div>
       <div class="input-bar">
-        <input type="text" id="userInput" placeholder="Issue directive..." onkeydown="if(event.key==='Enter') sendPrompt()"/>
+        <input type="text" id="userInput" placeholder="Issue vocal or text directive..." onkeydown="if(event.key==='Enter') sendPrompt()"/>
+        <button id="micBtn" onclick="toggleVoice()">LISTEN</button>
         <button onclick="sendPrompt()">TRANSMIT</button>
       </div>
     </div>
@@ -149,27 +152,85 @@
       <div class="panel-header">Network Status</div>
       <div class="stat-box">
         <div>LOCAL IP: <span class="stat-val">192.168.1.X</span></div>
-        <div>API PORT: <span class="stat-val">11434 (OLLAMA)</span></div>
-        <div>LATENCY: <span class="stat-val">4ms (LAN)</span></div>
-        <div>SECURITY: <span class="stat-val">ISOLATED ENCLAVE</span></div>
+        <div>API PORT: <span class="stat-val">11434</span></div>
+        <div>LATENCY: <span class="stat-val">4ms</span></div>
       </div>
     </div>
   </main>
 
   <footer>
     <div>NODE IDENTIFIER: DLK74-SERVER-01</div>
-    <div>DIRECT INFERENCE CONSOLE</div>
+    <div>VOICE COMMAND BRIDGE ACTIVE</div>
   </footer>
 
   <script>
+    // --- Text-To-Speech (AI Spoken Response) ---
+    function speakText(text) {
+      if (!('speechSynthesis' in window)) return;
+      window.speechSynthesis.cancel();
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.rate = 1.05;
+      utterance.pitch = 0.95; // Gives a slightly deeper, more authoritative tone
+      utterance.lang = 'en-GB';
+      window.speechSynthesis.speak(utterance);
+    }
+
+    // --- Speech-To-Text (Microphone Input) ---
+    let recognition = null;
+    let isListening = false;
+    const micBtn = document.getElementById('micBtn');
+    const userInput = document.getElementById('userInput');
+
+    if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      recognition = new SpeechRecognition();
+      recognition.continuous = false;
+      recognition.interimResults = false;
+      recognition.lang = 'en-GB';
+
+      recognition.onresult = (event) => {
+        const transcript = event.results[0][0].transcript;
+        userInput.value = transcript;
+        sendPrompt(); // Transmit automatically once you finish speaking
+      };
+
+      recognition.onend = () => {
+        isListening = false;
+        micBtn.classList.remove('listening');
+        micBtn.textContent = 'LISTEN';
+      };
+
+      recognition.onerror = () => {
+        isListening = false;
+        micBtn.classList.remove('listening');
+        micBtn.textContent = 'LISTEN';
+      };
+    }
+
+    function toggleVoice() {
+      if (!recognition) {
+        alert("Speech Recognition is not supported on this browser. Use Chrome, Edge, or Safari.");
+        return;
+      }
+      if (isListening) {
+        recognition.stop();
+      } else {
+        userInput.value = '';
+        recognition.start();
+        isListening = true;
+        micBtn.classList.add('listening');
+        micBtn.textContent = 'LISTENING...';
+      }
+    }
+
+    // --- Prompt Transmission ---
     async function sendPrompt() {
-      const input = document.getElementById('userInput');
       const feed = document.getElementById('chat-feed');
-      const text = input.value.trim();
+      const text = userInput.value.trim();
       if (!text) return;
 
       feed.innerHTML += `<div class="msg user">${text}</div>`;
-      input.value = '';
+      userInput.value = '';
       feed.scrollTop = feed.scrollHeight;
 
       const aiMsg = document.createElement('div');
@@ -186,6 +247,7 @@
         });
         const data = await response.json();
         aiMsg.textContent = data.response;
+        speakText(data.response); // Speak the AI answer aloud
       } catch (err) {
         aiMsg.textContent = '[ERROR]: Unable to reach Ollama daemon on port 11434. Ensure container is online.';
       }
