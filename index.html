@@ -40,6 +40,7 @@
       padding: 8px 16px;
       box-shadow: var(--glow);
       flex-shrink: 0;
+      transition: all 0.3s ease;
     }
     .hud-title { font-size: 1.1rem; letter-spacing: 3px; font-weight: bold; }
     .status-badge { font-size: 0.8rem; letter-spacing: 1px; }
@@ -400,7 +401,6 @@
       renderer.setSize(width, height);
       renderer.setPixelRatio(window.devicePixelRatio);
 
-      // Particle geometry
       const particleCount = 1800;
       const geometry = new THREE.BufferGeometry();
       const positions = new Float32Array(particleCount * 3);
@@ -469,7 +469,6 @@
       renderer.render(scene, camera);
     }
 
-    // Toggle between JARVIS Arc Core and Connection Brain
     function triggerConnectionView(duration = 6000) {
       showingConnections = true;
       targetBrainScale = 1.0;
@@ -564,13 +563,61 @@
       }, 250);
     }
 
-    // --- 5. Speech Synthesis & Voice Pipeline ---
+    // --- 5. Mobile-Unlocked Speech Synthesis Engine ---
+    let audioUnlocked = false;
+    let pendingGreeting = null;
+
+    function primeVoices() {
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.getVoices();
+        window.speechSynthesis.onvoiceschanged = () => {
+          window.speechSynthesis.getVoices();
+        };
+      }
+    }
+    primeVoices();
+
+    function unlockAudio() {
+      if (audioUnlocked) return;
+      audioUnlocked = true;
+
+      if ('speechSynthesis' in window) {
+        const silent = new SpeechSynthesisUtterance('');
+        silent.volume = 0;
+        window.speechSynthesis.speak(silent);
+      }
+
+      if (pendingGreeting) {
+        speakText(pendingGreeting);
+        pendingGreeting = null;
+      }
+
+      window.removeEventListener('touchstart', unlockAudio);
+      window.removeEventListener('pointerdown', unlockAudio);
+      window.removeEventListener('click', unlockAudio);
+    }
+
+    window.addEventListener('touchstart', unlockAudio, { passive: true });
+    window.addEventListener('pointerdown', unlockAudio, { passive: true });
+    window.addEventListener('click', unlockAudio, { passive: true });
+
     function speakText(text) {
       if (!('speechSynthesis' in window)) return;
+
+      if (!audioUnlocked && /android|iPad|iPhone|iPod/i.test(navigator.userAgent)) {
+        pendingGreeting = text;
+        return;
+      }
+
       window.speechSynthesis.cancel();
       const utterance = new SpeechSynthesisUtterance(text);
       utterance.rate = 1.05;
       utterance.lang = 'en-GB';
+
+      const voices = window.speechSynthesis.getVoices();
+      const ukVoice = voices.find(v => v.lang === 'en-GB' || v.lang === 'en_GB');
+      if (ukVoice) utterance.voice = ukVoice;
+
       utterance.onstart = () => triggerActiveDashboard(true);
       utterance.onend = () => triggerActiveDashboard(false);
       window.speechSynthesis.speak(utterance);
@@ -612,7 +659,6 @@
       userInput.value = '';
       feed.scrollTop = feed.scrollHeight;
 
-      // Connection Inspection Interceptor
       if (/connection|connections|synapse|nodes|pathway/i.test(text)) {
         triggerConnectionView(7000);
       } else {
