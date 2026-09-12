@@ -79,7 +79,6 @@
       justify-content: space-between;
     }
 
-    /* Hidden background video pipeline for facial recognition */
     #hidden-camera-container {
       position: absolute;
       width: 320px;
@@ -89,7 +88,6 @@
       z-index: -999;
     }
 
-    /* Synthetic Android Biometric Box */
     .android-avatar-box {
       position: relative;
       width: 100%;
@@ -130,7 +128,6 @@
     .stat-box { font-size: 0.8rem; line-height: 1.5; }
     .stat-val { color: #fff; font-weight: bold; }
 
-    /* The Stark JARVIS Core & Dynamic Synapse Stage */
     .core-stage {
       position: relative;
       width: 100%;
@@ -216,7 +213,6 @@
       z-index: 4;
     }
 
-    /* Audio Equalizer Matrix */
     .audio-matrix {
       display: flex;
       gap: 4px;
@@ -232,7 +228,6 @@
     }
     .audio-bar.active { background: var(--neon-cyan); box-shadow: 0 0 6px var(--neon-cyan); }
 
-    /* Conversation Console */
     #chat-feed {
       flex: 1;
       min-height: 180px;
@@ -285,7 +280,6 @@
 </head>
 <body>
 
-  <!-- Hidden camera pipeline -->
   <div id="hidden-camera-container">
     <video id="webcam" width="320" height="240" autoplay muted playsinline></video>
     <canvas id="overlay" width="320" height="240"></canvas>
@@ -297,7 +291,6 @@
   </header>
 
   <main>
-    <!-- Left: Biometric Optical Sensor -->
     <div class="panel">
       <div class="panel-header"><span>Synthetic Biometric ID</span><span>NODE 01</span></div>
       <div class="android-avatar-box" id="androidBox">
@@ -318,7 +311,6 @@
       </div>
     </div>
 
-    <!-- Center: The Stark JARVIS Arc Core & Dynamic Synapse Matrix -->
     <div class="panel">
       <div class="panel-header">
         <span>JARVIS AI Core Hologram</span>
@@ -350,7 +342,6 @@
       </div>
     </div>
 
-    <!-- Right: Telemetry Dashboard -->
     <div class="panel">
       <div class="panel-header"><span>Telemetry & Audio Wave</span><span>LIVE</span></div>
       
@@ -556,12 +547,13 @@
       }, 250);
     }
 
-    // --- 5 & 6. Always-On Live Mic, Mobile Unlocked Speech Engine & Dispatcher ---
+    // --- 5 & 6. Debounced Live Mic Engine & Speech Synthesis ---
     let recognition = null;
     let isSpeaking = false;
     let liveMicEnabled = true;
     let audioUnlocked = false;
     let pendingGreeting = null;
+    let restartTimer = null;
 
     const micBtn = document.getElementById('micBtn');
     const userInput = document.getElementById('userInput');
@@ -591,7 +583,7 @@
         pendingGreeting = null;
       }
 
-      restartListening();
+      scheduleRestart(200);
 
       window.removeEventListener('touchstart', unlockAudio);
       window.removeEventListener('pointerdown', unlockAudio);
@@ -631,13 +623,13 @@
       utterance.onend = () => {
         isSpeaking = false;
         triggerActiveDashboard(false);
-        restartListening();
+        scheduleRestart(800);
       };
 
       utterance.onerror = () => {
         isSpeaking = false;
         triggerActiveDashboard(false);
-        restartListening();
+        scheduleRestart(800);
       };
 
       window.speechSynthesis.speak(utterance);
@@ -681,35 +673,42 @@
 
       recognition.onend = () => {
         if (!isSpeaking && liveMicEnabled) {
-          restartListening();
+          scheduleRestart(1000);
         }
       };
 
       recognition.onerror = (e) => {
-        if (e.error !== 'no-speech' && e.error !== 'aborted') {
+        if (e.error === 'no-speech') {
+          scheduleRestart(1200);
+        } else if (e.error !== 'aborted') {
           console.warn("Speech recognition warning:", e.error);
         }
       };
 
-      restartListening();
+      scheduleRestart(500);
     }
 
-    function restartListening() {
-      if (!recognition || isSpeaking || !liveMicEnabled) return;
-      try {
-        recognition.start();
-      } catch (err) {}
+    function scheduleRestart(delay = 1000) {
+      if (!liveMicEnabled || isSpeaking) return;
+      if (restartTimer) clearTimeout(restartTimer);
+
+      restartTimer = setTimeout(() => {
+        try {
+          if (recognition) recognition.start();
+        } catch (err) {}
+      }, delay);
     }
 
     function toggleVoice() {
       liveMicEnabled = !liveMicEnabled;
       if (liveMicEnabled) {
-        restartListening();
+        scheduleRestart(300);
         if (micBtn) {
           micBtn.classList.add('listening');
           micBtn.textContent = 'HOT MIC: LIVE';
         }
       } else {
+        if (restartTimer) clearTimeout(restartTimer);
         if (recognition) recognition.abort();
         if (micBtn) {
           micBtn.classList.remove('listening');
