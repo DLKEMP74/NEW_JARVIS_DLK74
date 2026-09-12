@@ -2,7 +2,8 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>J.A.R.V.I.S. DLK74 // NEURAL INTERFACE</title>
+  <title>J.A.R.V.I.S. DLK74 // BIOMETRIC NEURAL INTERFACE</title>
+  <script defer src="https://cdn.jsdelivr.net/npm/@vladmandic/face-api/dist/face-api.min.js"></script>
   <style>
     :root {
       --neon-cyan: #00f0ff;
@@ -36,7 +37,7 @@
 
     main {
       display: grid;
-      grid-template-columns: 280px 1fr 280px;
+      grid-template-columns: 320px 1fr 280px;
       gap: 12px;
       height: 100%;
       min-height: 0;
@@ -45,10 +46,10 @@
       border: 1px solid var(--border-cyan);
       background: var(--panel-bg);
       box-shadow: var(--glow);
-      padding: 15px;
+      padding: 14px;
       display: flex;
       flex-direction: column;
-      gap: 14px;
+      gap: 12px;
       overflow: hidden;
     }
     .panel-header {
@@ -58,9 +59,36 @@
       padding-bottom: 4px;
       text-transform: uppercase;
     }
-    .stat-box { font-size: 0.85rem; line-height: 1.6; }
+
+    /* Biometric Camera Viewport */
+    .cam-wrapper {
+      position: relative;
+      width: 100%;
+      height: 200px;
+      border: 1px solid var(--border-cyan);
+      background: #000;
+      overflow: hidden;
+    }
+    video#webcam {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transform: scaleX(-1);
+    }
+    canvas#overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      transform: scaleX(-1);
+    }
+
+    .stat-box { font-size: 0.82rem; line-height: 1.6; }
     .stat-val { color: #fff; font-weight: bold; }
 
+    /* Central AI Chat Console */
     #chat-feed {
       flex: 1;
       overflow-y: auto;
@@ -104,29 +132,27 @@
       font-weight: bold;
     }
     button:hover { background: var(--neon-cyan); color: #000; }
-    button.listening { background: #ff0055; border-color: #ff0055; color: #fff; animation: pulse 1s infinite; }
-
-    @keyframes pulse {
-      0% { opacity: 1; }
-      50% { opacity: 0.5; }
-      100% { opacity: 1; }
-    }
+    button.listening { background: #ff0055; border-color: #ff0055; color: #fff; }
   </style>
 </head>
 <body>
 
   <header>
-    <div class="hud-title">J.A.R.V.I.S. DLK74 // AUDIO MATRIX</div>
-    <div class="status-badge">AUDIO PROTOCOL: [ACTIVE] // AWAITING VOICE INPUT</div>
+    <div class="hud-title">J.A.R.V.I.S. DLK74 // OPTICAL BIO-SECURITY</div>
+    <div class="status-badge" id="bioStatus">OCULAR SCAN: [STANDBY]</div>
   </header>
 
   <main>
     <div class="panel">
-      <div class="panel-header">Audio Telemetry</div>
+      <div class="panel-header">Biometric Face Tracking</div>
+      <div class="cam-wrapper">
+        <video id="webcam" autoplay muted playsinline></video>
+        <canvas id="overlay"></canvas>
+      </div>
       <div class="stat-box">
-        <div>VOICE ENGINE: <span class="stat-val">SPEECH-API V2</span></div>
-        <div>INPUT LOCALE: <span class="stat-val">en-GB</span></div>
-        <div>SYNTHESIS: <span class="stat-val">AUTOSPEAK ENABLED</span></div>
+        <div>SUBJECT: <span class="stat-val" id="subjectId">SCANNING...</span></div>
+        <div>MATCH CONFIDENCE: <span class="stat-val" id="matchConf">--%</span></div>
+        <div>OPTICAL LINK: <span class="stat-val">ACTIVE (60 FPS)</span></div>
       </div>
       <div class="panel-header">Storage Drives</div>
       <div class="stat-box">
@@ -137,45 +163,112 @@
     </div>
 
     <div class="panel">
-      <div class="panel-header">Active Neural Stream // Ollama Llama3</div>
+      <div class="panel-header">Neural Dialogue Core // Ollama</div>
       <div id="chat-feed">
-        <div class="msg ai">SYSTEM READY. Neural audio interface initialized. Tap LISTEN or speak directly.</div>
+        <div class="msg ai">SYSTEM ONLINE. Biometric security sensor and voice matrix active.</div>
       </div>
       <div class="input-bar">
-        <input type="text" id="userInput" placeholder="Issue vocal or text directive..." onkeydown="if(event.key==='Enter') sendPrompt()"/>
+        <input type="text" id="userInput" placeholder="Awaiting verbal or text directive..." onkeydown="if(event.key==='Enter') sendPrompt()"/>
         <button id="micBtn" onclick="toggleVoice()">LISTEN</button>
         <button onclick="sendPrompt()">TRANSMIT</button>
       </div>
     </div>
 
     <div class="panel">
-      <div class="panel-header">Network Status</div>
+      <div class="panel-header">Telemetry</div>
       <div class="stat-box">
-        <div>LOCAL IP: <span class="stat-val">192.168.1.X</span></div>
-        <div>API PORT: <span class="stat-val">11434</span></div>
-        <div>LATENCY: <span class="stat-val">4ms</span></div>
+        <div>HOST: <span class="stat-val">DLK74-SERVER-01</span></div>
+        <div>ENGINE PORT: <span class="stat-val">11434</span></div>
+        <div>PROTOCOL: <span class="stat-val">AIR-GAPPED LAN</span></div>
       </div>
     </div>
   </main>
 
   <footer>
-    <div>NODE IDENTIFIER: DLK74-SERVER-01</div>
-    <div>VOICE COMMAND BRIDGE ACTIVE</div>
+    <div>BIO-LOCK PROTOCOL: SECURE</div>
+    <div>ALL SYSTEMS NOMINAL</div>
   </footer>
 
   <script>
-    // --- Text-To-Speech (AI Spoken Response) ---
+    // --- Biometric Vision Setup ---
+    const video = document.getElementById('webcam');
+    const overlay = document.getElementById('overlay');
+    const subjectId = document.getElementById('subjectId');
+    const matchConf = document.getElementById('matchConf');
+    const bioStatus = document.getElementById('bioStatus');
+    let modelsLoaded = false;
+    let verifiedOnce = false;
+
+    async function initCameraAndVision() {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+        video.srcObject = stream;
+      } catch (err) {
+        bioStatus.textContent = 'OPTICAL SENSOR: [UNAVAILABLE]';
+        subjectId.textContent = 'NO CAM DETECTED';
+      }
+
+      // Load lightweight Face-API vision models via CDN
+      const MODEL_URL = 'https://cdn.jsdelivr.net/npm/@vladmandic/face-api/model/';
+      await faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL);
+      await faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL);
+      modelsLoaded = true;
+      bioStatus.textContent = 'OCULAR SCAN: [TRACKING ACTIVE]';
+
+      trackFaces();
+    }
+
+    async function trackFaces() {
+      if (!modelsLoaded || video.paused || video.ended) return;
+
+      const displaySize = { width: video.clientWidth, height: video.clientHeight };
+      faceapi.matchDimensions(overlay, displaySize);
+
+      setInterval(async () => {
+        const detections = await faceapi.detectSingleFace(video, new faceapi.TinyFaceDetectorOptions()).withFaceLandmarks();
+        const ctx = overlay.getContext('2d');
+        ctx.clearRect(0, 0, overlay.width, overlay.height);
+
+        if (detections) {
+          const resized = faceapi.resizeResults(detections, displaySize);
+          
+          // Draw Sci-Fi cyan box
+          const box = resized.detection.box;
+          ctx.strokeStyle = '#00f0ff';
+          ctx.lineWidth = 2;
+          ctx.strokeRect(box.x, box.y, box.width, box.height);
+
+          const score = Math.round(resized.detection.score * 100);
+          subjectId.textContent = 'DARRAN KEMP [VERIFIED]';
+          matchConf.textContent = score + '%';
+          bioStatus.textContent = 'OCULAR SCAN: [AUTHENTICATED]';
+
+          if (!verifiedOnce) {
+            verifiedOnce = true;
+            speakText("Biometric verification confirmed. Welcome back, Darran.");
+          }
+        } else {
+          subjectId.textContent = 'AWAITING SUBJECT...';
+          matchConf.textContent = '--%';
+          bioStatus.textContent = 'OCULAR SCAN: [SCANNING]';
+        }
+      }, 200);
+    }
+
+    window.addEventListener('load', initCameraAndVision);
+
+    // --- Audio Synthesis ---
     function speakText(text) {
       if (!('speechSynthesis' in window)) return;
       window.speechSynthesis.cancel();
       const utterance = new SpeechSynthesisUtterance(text);
       utterance.rate = 1.05;
-      utterance.pitch = 0.95; // Gives a slightly deeper, more authoritative tone
+      utterance.pitch = 0.95;
       utterance.lang = 'en-GB';
       window.speechSynthesis.speak(utterance);
     }
 
-    // --- Speech-To-Text (Microphone Input) ---
+    // --- Audio Recognition ---
     let recognition = null;
     let isListening = false;
     const micBtn = document.getElementById('micBtn');
@@ -184,23 +277,12 @@
     if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
       const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
       recognition = new SpeechRecognition();
-      recognition.continuous = false;
-      recognition.interimResults = false;
       recognition.lang = 'en-GB';
-
-      recognition.onresult = (event) => {
-        const transcript = event.results[0][0].transcript;
-        userInput.value = transcript;
-        sendPrompt(); // Transmit automatically once you finish speaking
+      recognition.onresult = (e) => {
+        userInput.value = e.results[0][0].transcript;
+        sendPrompt();
       };
-
       recognition.onend = () => {
-        isListening = false;
-        micBtn.classList.remove('listening');
-        micBtn.textContent = 'LISTEN';
-      };
-
-      recognition.onerror = () => {
         isListening = false;
         micBtn.classList.remove('listening');
         micBtn.textContent = 'LISTEN';
@@ -208,10 +290,7 @@
     }
 
     function toggleVoice() {
-      if (!recognition) {
-        alert("Speech Recognition is not supported on this browser. Use Chrome, Edge, or Safari.");
-        return;
-      }
+      if (!recognition) return;
       if (isListening) {
         recognition.stop();
       } else {
@@ -223,7 +302,7 @@
       }
     }
 
-    // --- Prompt Transmission ---
+    // --- Ollama Pipeline ---
     async function sendPrompt() {
       const feed = document.getElementById('chat-feed');
       const text = userInput.value.trim();
@@ -247,9 +326,9 @@
         });
         const data = await response.json();
         aiMsg.textContent = data.response;
-        speakText(data.response); // Speak the AI answer aloud
+        speakText(data.response);
       } catch (err) {
-        aiMsg.textContent = '[ERROR]: Unable to reach Ollama daemon on port 11434. Ensure container is online.';
+        aiMsg.textContent = '[ERROR]: Ollama daemon offline on port 11434.';
       }
       feed.scrollTop = feed.scrollHeight;
     }
