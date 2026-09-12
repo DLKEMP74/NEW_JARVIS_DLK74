@@ -3,17 +3,18 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>J.A.R.V.I.S. DLK74 // NEURAL MATRIX</title>
+  <title>J.A.R.V.I.S. DLK74 // STARK HUD MATRIX</title>
   <!-- Vision and 3D Graphic Libraries -->
   <script defer src="https://cdn.jsdelivr.net/npm/@vladmandic/face-api/dist/face-api.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <style>
     :root {
       --neon-cyan: #00f0ff;
-      --neon-alert: #ff0055;
-      --panel-bg: rgba(6, 18, 30, 0.90);
+      --neon-bright: #7df9ff;
+      --neon-amber: #ffaa00;
+      --panel-bg: rgba(6, 18, 30, 0.92);
       --border-cyan: rgba(0, 240, 255, 0.35);
-      --glow: 0 0 12px rgba(0, 240, 255, 0.45);
+      --glow: 0 0 14px rgba(0, 240, 255, 0.45);
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
     
@@ -45,7 +46,7 @@
 
     main {
       display: grid;
-      grid-template-columns: 300px 1fr 280px;
+      grid-template-columns: 290px 1fr 280px;
       gap: 10px;
       flex: 1;
       min-height: 0;
@@ -60,6 +61,11 @@
       flex-direction: column;
       gap: 10px;
       overflow: hidden;
+      transition: border-color 0.3s ease, box-shadow 0.3s ease;
+    }
+    .panel.active-state {
+      border-color: var(--neon-bright);
+      box-shadow: 0 0 20px rgba(0, 240, 255, 0.75);
     }
 
     .panel-header {
@@ -68,9 +74,11 @@
       border-bottom: 1px solid var(--border-cyan);
       padding-bottom: 4px;
       text-transform: uppercase;
+      display: flex;
+      justify-content: space-between;
     }
 
-    /* Invisible Hardware Optical Pipe */
+    /* Hidden background video engine */
     #hidden-camera-container {
       position: absolute;
       width: 320px;
@@ -78,14 +86,13 @@
       opacity: 0;
       pointer-events: none;
       z-index: -999;
-      overflow: hidden;
     }
 
-    /* Synthetic Android Biometric Visualizer Box */
+    /* Synthetic Android Biometric Box */
     .android-avatar-box {
       position: relative;
       width: 100%;
-      height: 160px;
+      height: 140px;
       border: 1px solid var(--border-cyan);
       background: radial-gradient(circle, rgba(0, 240, 255, 0.05) 0%, rgba(2, 8, 15, 0.95) 85%);
       display: flex;
@@ -95,15 +102,12 @@
       overflow: hidden;
       box-shadow: inset 0 0 15px rgba(0, 240, 255, 0.15);
     }
-
     .android-svg {
-      width: 100px;
-      height: 100px;
+      width: 85px;
+      height: 85px;
       transition: all 0.4s ease;
       filter: drop-shadow(0 0 5px rgba(0, 240, 255, 0.4));
     }
-
-    /* Sweeping Laser Scanline */
     .scan-laser {
       position: absolute;
       top: 0;
@@ -114,87 +118,127 @@
       box-shadow: 0 0 8px var(--neon-cyan);
       animation: laserSweep 2.2s ease-in-out infinite;
     }
-
     @keyframes laserSweep {
       0% { top: 5%; opacity: 0.2; }
       50% { top: 90%; opacity: 1; }
       100% { top: 5%; opacity: 0.2; }
     }
-
-    /* Android Locked State */
-    .android-avatar-box.verified .android-svg {
-      filter: drop-shadow(0 0 12px #00f0ff);
-    }
-    .android-avatar-box.verified .eye-node {
-      fill: #ffffff !important;
-      filter: drop-shadow(0 0 6px #00f0ff);
-    }
+    .android-avatar-box.verified .android-svg { filter: drop-shadow(0 0 12px #00f0ff); }
+    .android-avatar-box.verified .eye-node { fill: #ffffff !important; filter: drop-shadow(0 0 6px #00f0ff); }
 
     .stat-box { font-size: 0.8rem; line-height: 1.5; }
     .stat-val { color: #fff; font-weight: bold; }
 
-    /* 3D Holographic Brain Stage */
-    .brain-stage {
+    /* ======================================================== */
+    /* THE STARK JARVIS CORE & EXPANDABLE SYNAPSE STAGE        */
+    /* ======================================================== */
+    .core-stage {
       position: relative;
       width: 100%;
-      height: 170px;
-      border: 1px solid rgba(0, 240, 255, 0.25);
-      background: radial-gradient(circle, rgba(0, 240, 255, 0.08) 0%, rgba(2, 8, 15, 0.6) 80%);
+      height: 240px;
+      border: 1px solid rgba(0, 240, 255, 0.35);
+      background: radial-gradient(circle, rgba(0, 240, 255, 0.1) 0%, rgba(2, 8, 15, 0.85) 80%);
       display: flex;
       justify-content: center;
       align-items: center;
       overflow: hidden;
     }
+
+    /* Authentic Stark Concentric Gyroscopic Rings */
+    .jarvis-reactor {
+      position: absolute;
+      width: 210px;
+      height: 210px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      transition: all 0.5s cubic-bezier(0.1, 0.9, 0.2, 1);
+    }
+    .ring-layer {
+      position: absolute;
+      border-radius: 50%;
+    }
+    .ring-1 {
+      width: 210px; height: 210px;
+      border: 1px dashed rgba(0, 240, 255, 0.35);
+      animation: spinCW 30s linear infinite;
+    }
+    .ring-2 {
+      width: 175px; height: 175px;
+      border: 2px solid rgba(0, 240, 255, 0.6);
+      border-top-color: transparent; border-bottom-color: transparent;
+      animation: spinCCW 12s linear infinite;
+    }
+    .ring-3 {
+      width: 140px; height: 140px;
+      border: 1px dotted rgba(0, 240, 255, 0.8);
+      animation: spinCW 8s linear infinite;
+    }
+    .ring-core-disc {
+      width: 80px; height: 80px;
+      border: 2px solid var(--neon-cyan);
+      background: radial-gradient(circle, rgba(0, 240, 255, 0.5) 0%, rgba(0, 240, 255, 0.05) 70%);
+      box-shadow: 0 0 15px var(--neon-cyan), inset 0 0 15px var(--neon-cyan);
+      border-radius: 50%;
+      animation: pulseCoreDisc 2.5s ease-in-out infinite;
+    }
+    .radial-spokes {
+      position: absolute;
+      width: 100%; height: 100%;
+      background: repeating-conic-gradient(from 0deg, rgba(0,240,255,0.2) 0deg 10deg, transparent 10deg 30deg);
+      border-radius: 50%;
+      opacity: 0.35;
+      animation: spinCW 45s linear infinite;
+    }
+
+    @keyframes spinCW { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+    @keyframes spinCCW { from { transform: rotate(360deg); } to { transform: rotate(-360deg); } }
+    @keyframes pulseCoreDisc {
+      0%, 100% { transform: scale(0.92); opacity: 0.8; }
+      50% { transform: scale(1.08); opacity: 1; box-shadow: 0 0 25px #00f0ff; }
+    }
+
+    /* Three.js Neural Synapse Brain Canvas (Overlay Engine) */
     #brain-canvas {
       position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      z-index: 2;
-    }
-    .hud-ring-outer {
-      position: absolute;
-      width: 150px;
-      height: 150px;
-      border: 1px dashed rgba(0, 240, 255, 0.4);
-      border-radius: 50%;
-      z-index: 1;
-      animation: spinClockwise 25s linear infinite;
-    }
-    .hud-ring-inner {
-      position: absolute;
-      width: 120px;
-      height: 120px;
-      border: 2px solid rgba(0, 240, 255, 0.5);
-      border-top-color: transparent;
-      border-bottom-color: transparent;
-      border-radius: 50%;
-      z-index: 1;
-      animation: spinCounter 10s linear infinite;
-    }
-    .hud-core-crosshair {
-      position: absolute;
-      width: 10px;
-      height: 10px;
-      border-top: 1px solid var(--neon-cyan);
-      border-left: 1px solid var(--neon-cyan);
-      z-index: 1;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      z-index: 3;
+      pointer-events: none;
+      transition: opacity 0.5s ease;
     }
 
-    @keyframes spinClockwise {
-      from { transform: rotate(0deg); }
-      to { transform: rotate(360deg); }
-    }
-    @keyframes spinCounter {
-      from { transform: rotate(360deg); }
-      to { transform: rotate(0deg); }
+    .mode-indicator {
+      position: absolute;
+      top: 8px; right: 10px;
+      font-size: 0.65rem;
+      letter-spacing: 1px;
+      background: rgba(0, 240, 255, 0.15);
+      padding: 3px 6px;
+      border: 1px solid var(--border-cyan);
+      z-index: 4;
     }
 
-    /* AI Dialogue Stream */
+    /* Audio Equalizer Matrix */
+    .audio-matrix {
+      display: flex;
+      gap: 4px;
+      height: 22px;
+      align-items: flex-end;
+    }
+    .audio-bar {
+      flex: 1;
+      background: rgba(0, 240, 255, 0.25);
+      height: 3px;
+      border-radius: 1px;
+      transition: height 0.08s ease;
+    }
+    .audio-bar.active { background: var(--neon-cyan); box-shadow: 0 0 6px var(--neon-cyan); }
+
+    /* Conversation Console */
     #chat-feed {
       flex: 1;
-      min-height: 200px;
+      min-height: 180px;
       overflow-y: auto;
       border: 1px solid rgba(0, 240, 255, 0.15);
       background: rgba(2, 8, 15, 0.6);
@@ -205,16 +249,8 @@
       font-size: 0.85rem;
     }
     .msg { padding: 8px 12px; border-radius: 4px; max-width: 85%; }
-    .msg.user {
-      align-self: flex-end;
-      background: rgba(0, 240, 255, 0.1);
-      border: 1px solid var(--border-cyan);
-    }
-    .msg.ai {
-      align-self: flex-start;
-      background: rgba(255, 255, 255, 0.05);
-      border-left: 2px solid var(--neon-cyan);
-    }
+    .msg.user { align-self: flex-end; background: rgba(0, 240, 255, 0.1); border: 1px solid var(--border-cyan); }
+    .msg.ai { align-self: flex-start; background: rgba(255, 255, 255, 0.05); border-left: 2px solid var(--neon-cyan); }
 
     .input-bar { display: flex; gap: 8px; flex-shrink: 0; }
     input {
@@ -243,124 +279,129 @@
       body { height: auto; min-height: 100dvh; overflow-y: auto; }
       main { display: flex; flex-direction: column; height: auto; }
       .panel { width: 100%; height: auto; }
-      .android-avatar-box { height: 150px; }
-      .brain-stage { height: 160px; }
-      #chat-feed { min-height: 250px; max-height: 350px; }
+      .core-stage { height: 210px; }
+      .jarvis-reactor { transform: scale(0.85); }
+      #chat-feed { min-height: 240px; max-height: 350px; }
       .hud-title { font-size: 0.95rem; }
-      .status-badge { font-size: 0.75rem; }
     }
   </style>
 </head>
 <body>
 
-  <!-- Hidden background camera pipeline for face-api.js -->
+  <!-- Hidden camera pipeline -->
   <div id="hidden-camera-container">
     <video id="webcam" width="320" height="240" autoplay muted playsinline></video>
     <canvas id="overlay" width="320" height="240"></canvas>
   </div>
 
   <header>
-    <div class="hud-title">J.A.R.V.I.S. DLK74 // SYNTHETIC CORE</div>
-    <div class="status-badge" id="bioStatus">SYNTH-OPTIC: [STANDBY]</div>
+    <div class="hud-title">J.A.R.V.I.S. DLK74 // STARK INDUSTRIES</div>
+    <div class="status-badge" id="bioStatus">CORE: [STANDBY]</div>
   </header>
 
   <main>
-    <!-- Left: Synthetic Android Biometric Box -->
+    <!-- Left: Biometric Optical Sensor -->
     <div class="panel">
-      <div class="panel-header">Synthetic Identity Verification</div>
-      
+      <div class="panel-header"><span>Synthetic Biometric ID</span><span>NODE 01</span></div>
       <div class="android-avatar-box" id="androidBox">
         <div class="scan-laser"></div>
-        
-        <!-- Cybernetic Android Head Silhouette -->
         <svg class="android-svg" viewBox="0 0 100 100">
-          <!-- Cyber Skull Wireframe -->
-          <polygon points="30,15 70,15 85,35 80,65 65,90 35,90 20,65 15,35" 
-                   stroke="#00f0ff" stroke-width="1.5" fill="none" opacity="0.65"/>
-          <!-- Brow and Jaw Mechanics -->
-          <path d="M25 40 L75 40 M35 75 L65 75 M40 90 L60 90" 
-                stroke="#00f0ff" stroke-width="1.2" opacity="0.5"/>
-          <line x1="50" y1="15" x2="50" y2="40" stroke="#00f0ff" stroke-width="1" opacity="0.4"/>
-          <!-- Optical Sensor Eye Cavities -->
+          <polygon points="30,15 70,15 85,35 80,65 65,90 35,90 20,65 15,35" stroke="#00f0ff" stroke-width="1.5" fill="none" opacity="0.65"/>
+          <path d="M25 40 L75 40 M35 75 L65 75 M40 90 L60 90" stroke="#00f0ff" stroke-width="1.2" opacity="0.5"/>
           <circle cx="37" cy="46" r="6" stroke="#00f0ff" stroke-width="1.5" fill="rgba(0, 240, 255, 0.1)"/>
           <circle cx="63" cy="46" r="6" stroke="#00f0ff" stroke-width="1.5" fill="rgba(0, 240, 255, 0.1)"/>
-          <!-- Active Eye Cores -->
           <circle id="leftEye" class="eye-node" cx="37" cy="46" r="2.5" fill="#00f0ff"/>
           <circle id="rightEye" class="eye-node" cx="63" cy="46" r="2.5" fill="#00f0ff"/>
-          <!-- Temple Node Crossbars -->
-          <line x1="15" y1="46" x2="25" y2="46" stroke="#00f0ff" stroke-width="1"/>
-          <line x1="75" y1="46" x2="85" y2="46" stroke="#00f0ff" stroke-width="1"/>
         </svg>
       </div>
-
       <div class="stat-box">
         <div>SYNTHETIC ID: <span class="stat-val" id="subjectId">SEARCHING...</span></div>
         <div>MATCH CONF: <span class="stat-val" id="matchConf">--%</span></div>
-        <div>SENSOR MODE: <span class="stat-val">AIR-GAPPED BIOMETRIC</span></div>
-        <div>OPTICAL FEED: <span class="stat-val">PRIVACY SHIELD (HIDDEN)</span></div>
+        <div>FEED: <span class="stat-val">AIR-GAPPED PRIVACY</span></div>
       </div>
     </div>
 
-    <!-- Center: 3D Holographic Brain & AI Console -->
+    <!-- Center: The Stark JARVIS Arc Core & Dynamic Synapse Matrix -->
     <div class="panel">
-      <div class="panel-header">Neural Brain Core // Holographic Projection</div>
+      <div class="panel-header">
+        <span>JARVIS AI Core Hologram</span>
+        <span id="coreStatusText">REACTOR NOMINAL</span>
+      </div>
       
-      <div class="brain-stage" id="brainContainer">
-        <div class="hud-ring-outer"></div>
-        <div class="hud-ring-inner"></div>
-        <div class="hud-core-crosshair"></div>
+      <div class="core-stage" id="coreContainer">
+        <div class="mode-indicator" id="modeBadge">MODE: JARVIS ARC CORE</div>
+        
+        <!-- Authentic Stark Gyroscopic Core -->
+        <div class="jarvis-reactor" id="starkReactor">
+          <div class="radial-spokes"></div>
+          <div class="ring-layer ring-1"></div>
+          <div class="ring-layer ring-2"></div>
+          <div class="ring-layer ring-3"></div>
+          <div class="ring-core-disc"></div>
+        </div>
+
+        <!-- Hidden/Expandable Synapse Brain -->
         <canvas id="brain-canvas"></canvas>
       </div>
 
       <div id="chat-feed">
-        <div class="msg ai">NEURAL CORE ARMED. Optical privacy shield active. Standing by for instructions...</div>
+        <div class="msg ai">JARVIS CORE ONLINE. Ask me to "show connections" to visualize active synaptic pathways.</div>
       </div>
 
       <div class="input-bar">
-        <input type="text" id="userInput" placeholder="Issue directive..." onkeydown="if(event.key==='Enter') sendPrompt()"/>
+        <input type="text" id="userInput" placeholder="Ask directive or 'show connections'..." onkeydown="if(event.key==='Enter') sendPrompt()"/>
         <button id="micBtn" onclick="toggleVoice()">LISTEN</button>
         <button onclick="sendPrompt()">TRANSMIT</button>
       </div>
     </div>
 
-    <!-- Right: Telemetry & Browser Client -->
+    <!-- Right: Telemetry Dashboard -->
     <div class="panel">
-      <div class="panel-header">Client Diagnostics</div>
+      <div class="panel-header"><span>Telemetry & Audio Wave</span><span>LIVE</span></div>
+      
+      <div class="audio-matrix" id="audioEqualizer">
+        <div class="audio-bar"></div><div class="audio-bar"></div><div class="audio-bar"></div><div class="audio-bar"></div>
+        <div class="audio-bar"></div><div class="audio-bar"></div><div class="audio-bar"></div><div class="audio-bar"></div>
+        <div class="audio-bar"></div><div class="audio-bar"></div><div class="audio-bar"></div><div class="audio-bar"></div>
+      </div>
+
       <div class="stat-box">
         <div>CLIENT OS: <span class="stat-val" id="clientOs">DETECTING...</span></div>
         <div>BROWSER: <span class="stat-val" id="clientBrowser">DETECTING...</span></div>
-        <div>VIEWPORT: <span class="stat-val" id="clientViewport">AUTO</span></div>
         <div>SYNAPSE LOAD: <span class="stat-val" id="synapseLoad">STANDBY (0.02%)</span></div>
+        <div>TOPOLOGY MODE: <span class="stat-val" id="topologyMode">CORE_PRIMARY</span></div>
         <div>SERVER NODE: <span class="stat-val">DLK74-SERVER-01</span></div>
       </div>
     </div>
   </main>
 
   <footer>
-    <div id="runtimeEnv">SECURE LINK // ACTIVE</div>
+    <div id="runtimeEnv">STARK PROTOCOL // SECURE AIR-GAP</div>
     <div>ALL SYSTEMS NOMINAL</div>
   </footer>
 
   <script>
-    // --- 1. Three.js Holographic 3D Brain Core ---
-    let scene, camera, renderer, brainPointCloud;
-    let brainScale = 1.0;
-    let rotationSpeed = 0.008;
+    // --- 1. Three.js Synaptic Connection Engine ---
+    let scene, camera, renderer, brainPointCloud, synapseLines;
+    let targetBrainScale = 0.001; // Hidden in standby
+    let currentBrainScale = 0.001;
+    let showingConnections = false;
 
-    function initBrainHologram() {
-      const container = document.getElementById('brainContainer');
+    function initSynapseBrain() {
+      const container = document.getElementById('coreContainer');
       const width = container.clientWidth;
       const height = container.clientHeight;
 
       scene = new THREE.Scene();
-      camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 1000);
+      camera = new THREE.PerspectiveCamera(48, width / height, 0.1, 1000);
       camera.position.z = 24;
 
       renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('brain-canvas'), alpha: true, antialias: true });
       renderer.setSize(width, height);
       renderer.setPixelRatio(window.devicePixelRatio);
 
-      const particleCount = 1400;
+      // Particle geometry
+      const particleCount = 1800;
       const geometry = new THREE.BufferGeometry();
       const positions = new Float32Array(particleCount * 3);
 
@@ -370,13 +411,13 @@
         const theta = u * 2.0 * Math.PI;
         const phi = Math.acos(2.0 * v - 1.0);
         
-        let r = 7.0 + Math.sin(phi * 4.0) * 0.7;
+        let r = 8.0 + Math.sin(phi * 4.0) * 0.8;
         let x = r * Math.sin(phi) * Math.cos(theta);
-        let y = r * Math.cos(phi) * 0.8;
+        let y = r * Math.cos(phi) * 0.85;
         let z = r * Math.sin(phi) * Math.sin(theta) * 1.1;
 
         const hemisphere = (i % 2 === 0) ? 1 : -1;
-        x = (Math.abs(x) * 0.85 + 0.6) * hemisphere;
+        x = (Math.abs(x) * 0.88 + 0.8) * hemisphere;
 
         positions[i * 3] = x + (Math.random() - 0.5) * 0.4;
         positions[i * 3 + 1] = y + (Math.random() - 0.5) * 0.4;
@@ -387,165 +428,164 @@
 
       const material = new THREE.PointsMaterial({
         color: 0x00f0ff,
-        size: 0.22,
+        size: 0.25,
         transparent: true,
-        opacity: 0.85,
+        opacity: 0.9,
         blending: THREE.AdditiveBlending
       });
 
       brainPointCloud = new THREE.Points(geometry, material);
+      brainPointCloud.scale.set(0.001, 0.001, 0.001);
       scene.add(brainPointCloud);
 
-      window.addEventListener('resize', () => {
-        const w = container.clientWidth;
-        const h = container.clientHeight;
-        camera.aspect = w / h;
-        camera.updateProjectionMatrix();
-        renderer.setSize(w, h);
-      });
+      // Dynamic Synapse Connection Lines
+      const lineGeo = new THREE.BufferGeometry();
+      const linePos = [];
+      for (let j = 0; j < 120; j++) {
+        const idx1 = Math.floor(Math.random() * particleCount) * 3;
+        const idx2 = Math.floor(Math.random() * particleCount) * 3;
+        linePos.push(positions[idx1], positions[idx1+1], positions[idx1+2]);
+        linePos.push(positions[idx2], positions[idx2+1], positions[idx2+2]);
+      }
+      lineGeo.setAttribute('position', new THREE.Float32BufferAttribute(linePos, 3));
+      const lineMat = new THREE.LineBasicMaterial({ color: 0x7df9ff, transparent: true, opacity: 0.35 });
+      synapseLines = new THREE.LineSegments(lineGeo, lineMat);
+      synapseLines.scale.set(0.001, 0.001, 0.001);
+      scene.add(synapseLines);
 
-      animateBrain();
+      animateStage();
     }
 
-    function animateBrain() {
-      requestAnimationFrame(animateBrain);
-      if (brainPointCloud) {
-        brainPointCloud.rotation.y += rotationSpeed;
-        brainPointCloud.rotation.x = Math.sin(Date.now() * 0.001) * 0.15;
-        
-        brainScale += (1.0 - brainScale) * 0.05;
-        brainPointCloud.scale.set(brainScale, brainScale, brainScale);
+    function animateStage() {
+      requestAnimationFrame(animateStage);
+      currentBrainScale += (targetBrainScale - currentBrainScale) * 0.08;
+      
+      if (brainPointCloud && synapseLines) {
+        brainPointCloud.scale.set(currentBrainScale, currentBrainScale, currentBrainScale);
+        synapseLines.scale.set(currentBrainScale, currentBrainScale, currentBrainScale);
+        brainPointCloud.rotation.y += 0.01;
+        synapseLines.rotation.y += 0.01;
       }
       renderer.render(scene, camera);
     }
 
-    function pulseBrain(intensity = 1.25, speedBoost = 0.03) {
-      brainScale = intensity;
-      rotationSpeed = speedBoost;
-      document.getElementById('synapseLoad').textContent = 'ACTIVE INFERENCE';
+    // Toggle between JARVIS Arc Core and Connection Brain
+    function triggerConnectionView(duration = 6000) {
+      showingConnections = true;
+      targetBrainScale = 1.0;
+      document.getElementById('starkReactor').style.opacity = '0.15';
+      document.getElementById('starkReactor').style.transform = 'scale(0.7)';
+      document.getElementById('modeBadge').textContent = 'MODE: SYNAPTIC CONNECTIONS';
+      document.getElementById('topologyMode').textContent = 'SYNAPSE_EXPLODED';
+      document.getElementById('synapseLoad').textContent = 'GRAPH TOPOLOGY (91.4%)';
+      triggerActiveDashboard(true);
+
       setTimeout(() => {
-        rotationSpeed = 0.008;
+        showingConnections = false;
+        targetBrainScale = 0.001;
+        document.getElementById('starkReactor').style.opacity = '1.0';
+        document.getElementById('starkReactor').style.transform = 'scale(1.0)';
+        document.getElementById('modeBadge').textContent = 'MODE: JARVIS ARC CORE';
+        document.getElementById('topologyMode').textContent = 'CORE_PRIMARY';
         document.getElementById('synapseLoad').textContent = 'STANDBY (0.02%)';
-      }, 1800);
+        triggerActiveDashboard(false);
+      }, duration);
     }
 
-    // --- 2. Client Diagnostics Detection ---
-    function detectClientEnvironment() {
+    // --- 2. Dashboard Reactive Flux ---
+    let eqInterval = null;
+    function triggerActiveDashboard(active = true) {
+      const panels = document.querySelectorAll('.panel');
+      const eqBars = document.querySelectorAll('.audio-bar');
+
+      if (active) {
+        panels.forEach(p => p.classList.add('active-state'));
+        if (!eqInterval) {
+          eqInterval = setInterval(() => {
+            eqBars.forEach(bar => {
+              const h = Math.floor(Math.random() * 20) + 3;
+              bar.style.height = `${h}px`;
+              bar.classList.toggle('active', h > 11);
+            });
+          }, 80);
+        }
+      } else {
+        panels.forEach(p => p.classList.remove('active-state'));
+        if (eqInterval) {
+          clearInterval(eqInterval);
+          eqInterval = null;
+          eqBars.forEach(b => { b.style.height = '3px'; b.classList.remove('active'); });
+        }
+      }
+    }
+
+    // --- 3. Client Environment ---
+    function detectClient() {
       const ua = navigator.userAgent;
-      let os = "Unknown OS";
-      let browser = "Unknown Browser";
-
-      if (/android/i.test(ua)) os = "Android";
-      else if (/iPad|iPhone|iPod/.test(ua)) os = "iOS";
-      else if (/Windows/i.test(ua)) os = "Windows NT";
-      else if (/Macintosh/i.test(ua)) os = "macOS";
-      else if (/Linux/i.test(ua)) os = "Linux";
-
-      if (/chrome|crios/i.test(ua) && !/edge|edgios|opr\//i.test(ua)) browser = "Chrome";
-      else if (/safari/i.test(ua) && !/chrome|crios/i.test(ua)) browser = "Safari";
-      else if (/edg/i.test(ua)) browser = "Edge";
-      else if (/firefox|fxios/i.test(ua)) browser = "Firefox";
-
+      let os = /android/i.test(ua) ? "Android" : /iPad|iPhone|iPod/.test(ua) ? "iOS" : /Windows/i.test(ua) ? "Windows" : "Linux";
+      let browser = /chrome/i.test(ua) ? "Chrome" : /safari/i.test(ua) ? "Safari" : "Edge";
       document.getElementById('clientOs').textContent = os;
       document.getElementById('clientBrowser').textContent = browser;
-
-      const updateViewport = () => {
-        const vp = window.innerWidth <= 900 ? "MOBILE_STACK" : "DESKTOP_BRIDGE";
-        document.getElementById('clientViewport').textContent = `${vp} (${window.innerWidth}px)`;
-      };
-      updateViewport();
-      window.addEventListener('resize', updateViewport);
     }
 
-    // --- 3. Background Biometrics with Synthetic Android Reaction ---
+    // --- 4. Vision Pipeline ---
     const video = document.getElementById('webcam');
     const overlay = document.getElementById('overlay');
-    const subjectId = document.getElementById('subjectId');
-    const matchConf = document.getElementById('matchConf');
-    const bioStatus = document.getElementById('bioStatus');
-    const androidBox = document.getElementById('androidBox');
+    let modelsLoaded = false, verifiedOnce = false;
 
-    let modelsLoaded = false;
-    let verifiedOnce = false;
-
-    async function initCameraAndVision() {
+    async function initCamera() {
       try {
-        const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
         video.srcObject = stream;
-      } catch (err) {
-        bioStatus.textContent = 'SYNTH-OPTIC: [DISABLED]';
-        subjectId.textContent = 'SENSOR OFFLINE';
+      } catch (e) {
+        document.getElementById('bioStatus').textContent = 'CORE: [OPTIC OFFLINE]';
       }
-
       const MODEL_URL = 'https://cdn.jsdelivr.net/npm/@vladmandic/face-api/model/';
       await faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL);
-      await faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL);
       modelsLoaded = true;
-      bioStatus.textContent = 'SYNTH-OPTIC: [ACTIVE]';
-      trackFaces();
-    }
-
-    async function trackFaces() {
-      if (!modelsLoaded || video.paused || video.ended) return;
-      const displaySize = { width: 320, height: 240 };
-      faceapi.matchDimensions(overlay, displaySize);
-
+      document.getElementById('bioStatus').textContent = 'CORE: [ONLINE]';
+      
       setInterval(async () => {
-        const options = new faceapi.TinyFaceDetectorOptions({ inputSize: 320, scoreThreshold: 0.3 });
-        const detections = await faceapi.detectSingleFace(video, options).withFaceLandmarks();
-
+        if (!modelsLoaded || video.paused) return;
+        const detections = await faceapi.detectSingleFace(video, new faceapi.TinyFaceDetectorOptions({ scoreThreshold: 0.3 }));
         if (detections) {
-          const score = Math.round(detections.detection.score * 100);
-          subjectId.textContent = 'DARRAN KEMP [VERIFIED]';
-          matchConf.textContent = score + '%';
-          bioStatus.textContent = 'SYNTH-OPTIC: [AUTHENTICATED]';
-          androidBox.classList.add('verified');
-
+          document.getElementById('subjectId').textContent = 'DARRAN KEMP [OK]';
+          document.getElementById('matchConf').textContent = Math.round(detections.score * 100) + '%';
+          document.getElementById('androidBox').classList.add('verified');
           if (!verifiedOnce) {
             verifiedOnce = true;
-            pulseBrain(1.35, 0.04);
-            speakText("Biometric optical identity confirmed. Welcome back, Darran.");
+            speakText("JARVIS online. Welcome back, Darran.");
           }
         } else {
-          subjectId.textContent = 'SEARCHING...';
-          matchConf.textContent = '--%';
-          bioStatus.textContent = 'SYNTH-OPTIC: [ACTIVE]';
-          androidBox.classList.remove('verified');
+          document.getElementById('subjectId').textContent = 'SEARCHING...';
+          document.getElementById('matchConf').textContent = '--%';
+          document.getElementById('androidBox').classList.remove('verified');
         }
-      }, 200);
+      }, 250);
     }
 
-    // --- 4. Speech Audio Engine ---
+    // --- 5. Speech Synthesis & Voice Pipeline ---
     function speakText(text) {
       if (!('speechSynthesis' in window)) return;
       window.speechSynthesis.cancel();
       const utterance = new SpeechSynthesisUtterance(text);
       utterance.rate = 1.05;
-      utterance.pitch = 0.95;
       utterance.lang = 'en-GB';
-
-      utterance.onstart = () => pulseBrain(1.2, 0.025);
+      utterance.onstart = () => triggerActiveDashboard(true);
+      utterance.onend = () => triggerActiveDashboard(false);
       window.speechSynthesis.speak(utterance);
     }
 
-    let recognition = null;
-    let isListening = false;
+    let recognition = null, isListening = false;
     const micBtn = document.getElementById('micBtn');
     const userInput = document.getElementById('userInput');
 
     if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
-      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-      recognition = new SpeechRecognition();
+      const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+      recognition = new SR();
       recognition.lang = 'en-GB';
-      recognition.onresult = (e) => {
-        userInput.value = e.results[0][0].transcript;
-        sendPrompt();
-      };
-      recognition.onend = () => {
-        isListening = false;
-        micBtn.classList.remove('listening');
-        micBtn.textContent = 'LISTEN';
-      };
+      recognition.onresult = (e) => { userInput.value = e.results[0][0].transcript; sendPrompt(); };
+      recognition.onend = () => { isListening = false; micBtn.classList.remove('listening'); micBtn.textContent = 'LISTEN'; triggerActiveDashboard(false); };
     }
 
     function toggleVoice() {
@@ -558,10 +598,11 @@
         isListening = true;
         micBtn.classList.add('listening');
         micBtn.textContent = 'LISTENING...';
+        triggerActiveDashboard(true);
       }
     }
 
-    // --- 5. Ollama Pipeline ---
+    // --- 6. Prompt Parser & Ollama Pipeline ---
     async function sendPrompt() {
       const feed = document.getElementById('chat-feed');
       const text = userInput.value.trim();
@@ -571,21 +612,26 @@
       userInput.value = '';
       feed.scrollTop = feed.scrollHeight;
 
-      pulseBrain(1.4, 0.05);
+      // Connection Inspection Interceptor
+      if (/connection|connections|synapse|nodes|pathway/i.test(text)) {
+        triggerConnectionView(7000);
+      } else {
+        triggerActiveDashboard(true);
+      }
 
       const aiMsg = document.createElement('div');
       aiMsg.className = 'msg ai';
-      aiMsg.textContent = 'Analyzing neural query...';
+      aiMsg.textContent = 'JARVIS processing...';
       feed.appendChild(aiMsg);
       feed.scrollTop = feed.scrollHeight;
 
       try {
-        const response = await fetch('http://localhost:11434/api/generate', {
+        const res = await fetch('http://localhost:11434/api/generate', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ model: 'llama3:8b', prompt: text, stream: false })
         });
-        const data = await response.json();
+        const data = await res.json();
         aiMsg.textContent = data.response;
         speakText(data.response);
       } catch (err) {
@@ -595,9 +641,9 @@
     }
 
     window.addEventListener('DOMContentLoaded', () => {
-      detectClientEnvironment();
-      initBrainHologram();
-      initCameraAndVision();
+      detectClient();
+      initSynapseBrain();
+      initCamera();
     });
   </script>
 </body>
