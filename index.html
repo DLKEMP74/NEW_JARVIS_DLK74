@@ -4,7 +4,6 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>J.A.R.V.I.S. DLK74 // STARK HUD MATRIX</title>
-  <!-- Vision and 3D Graphic Libraries -->
   <script defer src="https://cdn.jsdelivr.net/npm/@vladmandic/face-api/dist/face-api.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <style>
@@ -31,6 +30,31 @@
       overflow-x: hidden;
     }
 
+    /* Mobile Audio Unlock Banner */
+    #audio-unlocker {
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(2, 7, 13, 0.85);
+      backdrop-filter: blur(8px);
+      z-index: 9999;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      cursor: pointer;
+      text-align: center;
+      padding: 20px;
+    }
+    #audio-unlocker .unlock-box {
+      border: 2px solid var(--neon-cyan);
+      box-shadow: 0 0 30px rgba(0, 240, 255, 0.4);
+      background: var(--panel-bg);
+      padding: 25px 35px;
+      border-radius: 4px;
+    }
+    #audio-unlocker h2 { font-size: 1.2rem; letter-spacing: 3px; margin-bottom: 8px; }
+    #audio-unlocker p { font-size: 0.85rem; opacity: 0.8; }
+
     header, footer {
       border: 1px solid var(--border-cyan);
       background: var(--panel-bg);
@@ -40,7 +64,6 @@
       padding: 8px 16px;
       box-shadow: var(--glow);
       flex-shrink: 0;
-      transition: all 0.3s ease;
     }
     .hud-title { font-size: 1.1rem; letter-spacing: 3px; font-weight: bold; }
     .status-badge { font-size: 0.8rem; letter-spacing: 1px; }
@@ -62,13 +85,11 @@
       flex-direction: column;
       gap: 10px;
       overflow: hidden;
-      transition: border-color 0.3s ease, box-shadow 0.3s ease;
     }
     .panel.active-state {
       border-color: var(--neon-bright);
       box-shadow: 0 0 20px rgba(0, 240, 255, 0.75);
     }
-
     .panel-header {
       font-size: 0.75rem;
       letter-spacing: 2px;
@@ -109,10 +130,7 @@
     }
     .scan-laser {
       position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 2px;
+      top: 0; left: 0; width: 100%; height: 2px;
       background: linear-gradient(90deg, transparent, var(--neon-cyan), transparent);
       box-shadow: 0 0 8px var(--neon-cyan);
       animation: laserSweep 2.2s ease-in-out infinite;
@@ -149,10 +167,7 @@
       align-items: center;
       transition: all 0.5s cubic-bezier(0.1, 0.9, 0.2, 1);
     }
-    .ring-layer {
-      position: absolute;
-      border-radius: 50%;
-    }
+    .ring-layer { position: absolute; border-radius: 50%; }
     .ring-1 {
       width: 210px; height: 210px;
       border: 1px dashed rgba(0, 240, 255, 0.35);
@@ -178,8 +193,7 @@
       animation: pulseCoreDisc 2.5s ease-in-out infinite;
     }
     .radial-spokes {
-      position: absolute;
-      width: 100%; height: 100%;
+      position: absolute; width: 100%; height: 100%;
       background: repeating-conic-gradient(from 0deg, rgba(0,240,255,0.2) 0deg 10deg, transparent 10deg 30deg);
       border-radius: 50%;
       opacity: 0.35;
@@ -194,51 +208,26 @@
     }
 
     #brain-canvas {
-      position: absolute;
-      top: 0; left: 0;
-      width: 100%; height: 100%;
-      z-index: 3;
-      pointer-events: none;
-      transition: opacity 0.5s ease;
+      position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+      z-index: 3; pointer-events: none; transition: opacity 0.5s ease;
     }
 
     .mode-indicator {
-      position: absolute;
-      top: 8px; right: 10px;
-      font-size: 0.65rem;
-      letter-spacing: 1px;
-      background: rgba(0, 240, 255, 0.15);
-      padding: 3px 6px;
-      border: 1px solid var(--border-cyan);
-      z-index: 4;
+      position: absolute; top: 8px; right: 10px; font-size: 0.65rem;
+      letter-spacing: 1px; background: rgba(0, 240, 255, 0.15);
+      padding: 3px 6px; border: 1px solid var(--border-cyan); z-index: 4;
     }
 
-    .audio-matrix {
-      display: flex;
-      gap: 4px;
-      height: 22px;
-      align-items: flex-end;
-    }
-    .audio-bar {
-      flex: 1;
-      background: rgba(0, 240, 255, 0.25);
-      height: 3px;
-      border-radius: 1px;
-      transition: height 0.08s ease;
-    }
+    .audio-matrix { display: flex; gap: 4px; height: 22px; align-items: flex-end; }
+    .audio-bar { flex: 1; background: rgba(0, 240, 255, 0.25); height: 3px; border-radius: 1px; transition: height 0.08s ease; }
     .audio-bar.active { background: var(--neon-cyan); box-shadow: 0 0 6px var(--neon-cyan); }
 
     #chat-feed {
-      flex: 1;
-      min-height: 180px;
-      overflow-y: auto;
+      flex: 1; min-height: 180px; overflow-y: auto;
       border: 1px solid rgba(0, 240, 255, 0.15);
       background: rgba(2, 8, 15, 0.6);
-      padding: 10px;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-      font-size: 0.85rem;
+      padding: 10px; display: flex; flex-direction: column;
+      gap: 10px; font-size: 0.85rem;
     }
     .msg { padding: 8px 12px; border-radius: 4px; max-width: 85%; }
     .msg.user { align-self: flex-end; background: rgba(0, 240, 255, 0.1); border: 1px solid var(--border-cyan); }
@@ -246,23 +235,17 @@
 
     .input-bar { display: flex; gap: 8px; flex-shrink: 0; }
     input {
-      flex: 1;
-      background: rgba(0, 240, 255, 0.05);
+      flex: 1; background: rgba(0, 240, 255, 0.05);
       border: 1px solid var(--border-cyan);
-      color: var(--neon-cyan);
-      padding: 10px;
-      font-family: inherit;
-      font-size: 16px;
+      color: var(--neon-cyan); padding: 10px;
+      font-family: inherit; font-size: 16px;
     }
     input:focus { outline: none; box-shadow: var(--glow); }
     button {
       background: rgba(0, 240, 255, 0.2);
       border: 1px solid var(--neon-cyan);
-      color: #fff;
-      padding: 0 14px;
-      cursor: pointer;
-      font-family: inherit;
-      font-weight: bold;
+      color: #fff; padding: 0 14px; cursor: pointer;
+      font-family: inherit; font-weight: bold;
     }
     button:hover { background: var(--neon-cyan); color: #000; }
     button.listening { background: #ff0055; border-color: #ff0055; color: #fff; }
@@ -279,6 +262,14 @@
   </style>
 </head>
 <body>
+
+  <!-- Touch Gesture Unlock Modal for Mobile Browsers -->
+  <div id="audio-unlocker" onclick="initializeAudioMatrix()">
+    <div class="unlock-box">
+      <h2>J.A.R.V.I.S. DLK74</h2>
+      <p>[ TAP TO ENGAGE NEURAL MATRIX ]</p>
+    </div>
+  </div>
 
   <div id="hidden-camera-container">
     <video id="webcam" width="320" height="240" autoplay muted playsinline></video>
@@ -332,12 +323,12 @@
       </div>
 
       <div id="chat-feed">
-        <div class="msg ai">JARVIS CORE ONLINE. Ask me to "show connections" to visualize active synaptic pathways.</div>
+        <div class="msg ai">JARVIS CORE ONLINE. Standing by for voice or text directives...</div>
       </div>
 
       <div class="input-bar">
-        <input type="text" id="userInput" placeholder="Ask directive or 'show connections'..." onkeydown="if(event.key==='Enter') sendPrompt()"/>
-        <button id="micBtn" onclick="toggleVoice()">HOT MIC: LIVE</button>
+        <input type="text" id="userInput" placeholder="Issue directive..." onkeydown="if(event.key==='Enter') sendPrompt()"/>
+        <button id="micBtn" onclick="toggleVoice()">LISTEN</button>
         <button onclick="sendPrompt()">TRANSMIT</button>
       </div>
     </div>
@@ -354,8 +345,7 @@
       <div class="stat-box">
         <div>CLIENT OS: <span class="stat-val" id="clientOs">DETECTING...</span></div>
         <div>BROWSER: <span class="stat-val" id="clientBrowser">DETECTING...</span></div>
-        <div>SYNAPSE LOAD: <span class="stat-val" id="synapseLoad">STANDBY (0.02%)</span></div>
-        <div>TOPOLOGY MODE: <span class="stat-val" id="topologyMode">CORE_PRIMARY</span></div>
+        <div>AUDIO MATRIX: <span class="stat-val" id="audioState">LOCKED</span></div>
         <div>SERVER NODE: <span class="stat-val">DLK74-SERVER-01</span></div>
       </div>
     </div>
@@ -367,11 +357,122 @@
   </footer>
 
   <script>
-    // --- 1. Three.js Synaptic Connection Engine ---
+    const isMobileDevice = /android|iPad|iPhone|iPod/i.test(navigator.userAgent);
+
+    // --- 1. Audio Unlock & Speech Pipeline ---
+    let audioMatrixArmed = false;
+    let verifiedOnce = false;
+
+    function initializeAudioMatrix() {
+      audioMatrixArmed = true;
+      document.getElementById('audio-unlocker').style.display = 'none';
+      document.getElementById('audioState').textContent = 'ARMED (ACTIVE)';
+
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+        const unlockUtterance = new SpeechSynthesisUtterance('Audio matrix online.');
+        unlockUtterance.rate = 1.05;
+        unlockUtterance.lang = 'en-GB';
+        window.speechSynthesis.speak(unlockUtterance);
+      }
+
+      if (isMobileDevice) {
+        document.getElementById('micBtn').textContent = 'LISTEN';
+      } else {
+        initDesktopHotMic();
+      }
+    }
+
+    function speakText(text) {
+      if (!('speechSynthesis' in window) || !audioMatrixArmed) return;
+
+      window.speechSynthesis.cancel();
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.rate = 1.05;
+      utterance.lang = 'en-GB';
+
+      const voices = window.speechSynthesis.getVoices();
+      const ukVoice = voices.find(v => v.lang === 'en-GB' || v.lang === 'en_GB');
+      if (ukVoice) utterance.voice = ukVoice;
+
+      utterance.onstart = () => triggerActiveDashboard(true);
+      utterance.onend = () => triggerActiveDashboard(false);
+      utterance.onerror = () => triggerActiveDashboard(false);
+
+      window.speechSynthesis.speak(utterance);
+    }
+
+    // Force voice preload
+    if ('speechSynthesis' in window) {
+      window.speechSynthesis.getVoices();
+      window.speechSynthesis.onvoiceschanged = () => window.speechSynthesis.getVoices();
+    }
+
+    // --- 2. Controlled Microphone Engine (No Mobile Chime Loop) ---
+    let recognition = null;
+    let isListening = false;
+    const micBtn = document.getElementById('micBtn');
+    const userInput = document.getElementById('userInput');
+
+    if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+      const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+      recognition = new SR();
+      recognition.lang = 'en-GB';
+      recognition.continuous = !isMobileDevice; // Only continuous on desktop to stop Android chime
+
+      recognition.onstart = () => {
+        isListening = true;
+        micBtn.classList.add('listening');
+        micBtn.textContent = 'LISTENING...';
+        triggerActiveDashboard(true);
+      };
+
+      recognition.onresult = (e) => {
+        const transcript = e.results[e.results.length - 1][0].transcript.trim();
+        const cleaned = transcript.replace(/jarvis/gi, '').trim();
+        userInput.value = cleaned || transcript;
+        sendPrompt();
+      };
+
+      recognition.onend = () => {
+        isListening = false;
+        micBtn.classList.remove('listening');
+        micBtn.textContent = 'LISTEN';
+        triggerActiveDashboard(false);
+
+        // Only auto-restart on desktop
+        if (!isMobileDevice && audioMatrixArmed) {
+          try { recognition.start(); } catch(e) {}
+        }
+      };
+
+      recognition.onerror = () => {
+        isListening = false;
+        micBtn.classList.remove('listening');
+        micBtn.textContent = 'LISTEN';
+        triggerActiveDashboard(false);
+      };
+    }
+
+    function initDesktopHotMic() {
+      if (!isMobileDevice && recognition) {
+        try { recognition.start(); } catch(e) {}
+      }
+    }
+
+    function toggleVoice() {
+      if (!recognition) return;
+      if (isListening) {
+        recognition.stop();
+      } else {
+        userInput.value = '';
+        try { recognition.start(); } catch(e) {}
+      }
+    }
+
+    // --- 3. Three.js Synaptic Brain ---
     let scene, camera, renderer, brainPointCloud, synapseLines;
-    let targetBrainScale = 0.001;
-    let currentBrainScale = 0.001;
-    let showingConnections = false;
+    let targetBrainScale = 0.001, currentBrainScale = 0.001;
 
     function initSynapseBrain() {
       const container = document.getElementById('coreContainer');
@@ -391,11 +492,8 @@
       const positions = new Float32Array(particleCount * 3);
 
       for (let i = 0; i < particleCount; i++) {
-        const u = Math.random();
-        const v = Math.random();
-        const theta = u * 2.0 * Math.PI;
-        const phi = Math.acos(2.0 * v - 1.0);
-        
+        const u = Math.random(), v = Math.random();
+        const theta = u * 2.0 * Math.PI, phi = Math.acos(2.0 * v - 1.0);
         let r = 8.0 + Math.sin(phi * 4.0) * 0.8;
         let x = r * Math.sin(phi) * Math.cos(theta);
         let y = r * Math.cos(phi) * 0.85;
@@ -410,14 +508,7 @@
       }
 
       geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-
-      const material = new THREE.PointsMaterial({
-        color: 0x00f0ff,
-        size: 0.25,
-        transparent: true,
-        opacity: 0.9,
-        blending: THREE.AdditiveBlending
-      });
+      const material = new THREE.PointsMaterial({ color: 0x00f0ff, size: 0.25, transparent: true, opacity: 0.9, blending: THREE.AdditiveBlending });
 
       brainPointCloud = new THREE.Points(geometry, material);
       brainPointCloud.scale.set(0.001, 0.001, 0.001);
@@ -432,8 +523,7 @@
         linePos.push(positions[idx2], positions[idx2+1], positions[idx2+2]);
       }
       lineGeo.setAttribute('position', new THREE.Float32BufferAttribute(linePos, 3));
-      const lineMat = new THREE.LineBasicMaterial({ color: 0x7df9ff, transparent: true, opacity: 0.35 });
-      synapseLines = new THREE.LineSegments(lineGeo, lineMat);
+      synapseLines = new THREE.LineSegments(lineGeo, new THREE.LineBasicMaterial({ color: 0x7df9ff, transparent: true, opacity: 0.35 }));
       synapseLines.scale.set(0.001, 0.001, 0.001);
       scene.add(synapseLines);
 
@@ -443,7 +533,6 @@
     function animateStage() {
       requestAnimationFrame(animateStage);
       currentBrainScale += (targetBrainScale - currentBrainScale) * 0.08;
-      
       if (brainPointCloud && synapseLines) {
         brainPointCloud.scale.set(currentBrainScale, currentBrainScale, currentBrainScale);
         synapseLines.scale.set(currentBrainScale, currentBrainScale, currentBrainScale);
@@ -454,28 +543,22 @@
     }
 
     function triggerConnectionView(duration = 6000) {
-      showingConnections = true;
       targetBrainScale = 1.0;
       document.getElementById('starkReactor').style.opacity = '0.15';
       document.getElementById('starkReactor').style.transform = 'scale(0.7)';
       document.getElementById('modeBadge').textContent = 'MODE: SYNAPTIC CONNECTIONS';
-      document.getElementById('topologyMode').textContent = 'SYNAPSE_EXPLODED';
-      document.getElementById('synapseLoad').textContent = 'GRAPH TOPOLOGY (91.4%)';
       triggerActiveDashboard(true);
 
       setTimeout(() => {
-        showingConnections = false;
         targetBrainScale = 0.001;
         document.getElementById('starkReactor').style.opacity = '1.0';
         document.getElementById('starkReactor').style.transform = 'scale(1.0)';
         document.getElementById('modeBadge').textContent = 'MODE: JARVIS ARC CORE';
-        document.getElementById('topologyMode').textContent = 'CORE_PRIMARY';
-        document.getElementById('synapseLoad').textContent = 'STANDBY (0.02%)';
         triggerActiveDashboard(false);
       }, duration);
     }
 
-    // --- 2. Dashboard Reactive Flux ---
+    // --- 4. Dashboard Visualizer & Telemetry ---
     let eqInterval = null;
     function triggerActiveDashboard(active = true) {
       const panels = document.querySelectorAll('.panel');
@@ -502,19 +585,15 @@
       }
     }
 
-    // --- 3. Client Environment ---
     function detectClient() {
       const ua = navigator.userAgent;
-      let os = /android/i.test(ua) ? "Android" : /iPad|iPhone|iPod/.test(ua) ? "iOS" : /Windows/i.test(ua) ? "Windows" : "Linux";
-      let browser = /chrome/i.test(ua) ? "Chrome" : /safari/i.test(ua) ? "Safari" : "Edge";
-      document.getElementById('clientOs').textContent = os;
-      document.getElementById('clientBrowser').textContent = browser;
+      document.getElementById('clientOs').textContent = /android/i.test(ua) ? "Android" : /iPad|iPhone|iPod/.test(ua) ? "iOS" : /Windows/i.test(ua) ? "Windows" : "Linux";
+      document.getElementById('clientBrowser').textContent = /chrome/i.test(ua) ? "Chrome" : /safari/i.test(ua) ? "Safari" : "Edge";
     }
 
-    // --- 4. Vision Pipeline ---
+    // --- 5. Biometric Vision Loop with Robust Greeting ---
     const video = document.getElementById('webcam');
-    const overlay = document.getElementById('overlay');
-    let modelsLoaded = false, verifiedOnce = false;
+    let modelsLoaded = false;
 
     async function initCamera() {
       try {
@@ -527,196 +606,32 @@
       await faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL);
       modelsLoaded = true;
       document.getElementById('bioStatus').textContent = 'CORE: [ONLINE]';
-      
+
       setInterval(async () => {
         if (!modelsLoaded || video.paused) return;
-        const detections = await faceapi.detectSingleFace(video, new faceapi.TinyFaceDetectorOptions({ scoreThreshold: 0.3 }));
+        const detections = await faceapi.detectSingleFace(video, new faceapi.TinyFaceDetectorOptions({ scoreThreshold: 0.25 }));
+
         if (detections) {
           document.getElementById('subjectId').textContent = 'DARRAN KEMP [OK]';
           document.getElementById('matchConf').textContent = Math.round(detections.score * 100) + '%';
           document.getElementById('androidBox').classList.add('verified');
+
           if (!verifiedOnce) {
             verifiedOnce = true;
-            speakText("JARVIS online. Welcome back, Darran.");
+            const chatFeed = document.getElementById('chat-feed');
+            chatFeed.innerHTML += `<div class="msg ai">Welcome back, Darran. Biometric verification confirmed. Systems online.</div>`;
+            chatFeed.scrollTop = chatFeed.scrollHeight;
+            speakText("Welcome back, Darran. Systems are operational.");
           }
         } else {
           document.getElementById('subjectId').textContent = 'SEARCHING...';
           document.getElementById('matchConf').textContent = '--%';
           document.getElementById('androidBox').classList.remove('verified');
         }
-      }, 250);
+      }, 300);
     }
 
-    // --- 5 & 6. Debounced Live Mic Engine & Speech Synthesis ---
-    let recognition = null;
-    let isSpeaking = false;
-    let liveMicEnabled = true;
-    let audioUnlocked = false;
-    let pendingGreeting = null;
-    let restartTimer = null;
-
-    const micBtn = document.getElementById('micBtn');
-    const userInput = document.getElementById('userInput');
-
-    function primeVoices() {
-      if ('speechSynthesis' in window) {
-        window.speechSynthesis.getVoices();
-        window.speechSynthesis.onvoiceschanged = () => {
-          window.speechSynthesis.getVoices();
-        };
-      }
-    }
-    primeVoices();
-
-    function unlockAudio() {
-      if (audioUnlocked) return;
-      audioUnlocked = true;
-
-      if ('speechSynthesis' in window) {
-        const silent = new SpeechSynthesisUtterance('');
-        silent.volume = 0;
-        window.speechSynthesis.speak(silent);
-      }
-
-      if (pendingGreeting) {
-        speakText(pendingGreeting);
-        pendingGreeting = null;
-      }
-
-      scheduleRestart(200);
-
-      window.removeEventListener('touchstart', unlockAudio);
-      window.removeEventListener('pointerdown', unlockAudio);
-      window.removeEventListener('click', unlockAudio);
-    }
-
-    window.addEventListener('touchstart', unlockAudio, { passive: true });
-    window.addEventListener('pointerdown', unlockAudio, { passive: true });
-    window.addEventListener('click', unlockAudio, { passive: true });
-
-    function speakText(text) {
-      if (!('speechSynthesis' in window)) return;
-
-      if (!audioUnlocked && /android|iPad|iPhone|iPod/i.test(navigator.userAgent)) {
-        pendingGreeting = text;
-        return;
-      }
-
-      if (recognition) {
-        try { recognition.abort(); } catch(e) {}
-      }
-
-      window.speechSynthesis.cancel();
-      const utterance = new SpeechSynthesisUtterance(text);
-      utterance.rate = 1.05;
-      utterance.lang = 'en-GB';
-
-      const voices = window.speechSynthesis.getVoices();
-      const ukVoice = voices.find(v => v.lang === 'en-GB' || v.lang === 'en_GB');
-      if (ukVoice) utterance.voice = ukVoice;
-
-      utterance.onstart = () => {
-        isSpeaking = true;
-        triggerActiveDashboard(true);
-      };
-
-      utterance.onend = () => {
-        isSpeaking = false;
-        triggerActiveDashboard(false);
-        scheduleRestart(800);
-      };
-
-      utterance.onerror = () => {
-        isSpeaking = false;
-        triggerActiveDashboard(false);
-        scheduleRestart(800);
-      };
-
-      window.speechSynthesis.speak(utterance);
-    }
-
-    function initLiveMicrophone() {
-      if (!('webkitSpeechRecognition' in window || 'SpeechRecognition' in window)) {
-        if (micBtn) micBtn.textContent = 'NO MIC API';
-        return;
-      }
-
-      const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-      recognition = new SR();
-      recognition.continuous = true;
-      recognition.interimResults = false;
-      recognition.lang = 'en-GB';
-
-      recognition.onstart = () => {
-        if (micBtn) {
-          micBtn.classList.add('listening');
-          micBtn.textContent = 'HOT MIC: LIVE';
-        }
-        const bioStatus = document.getElementById('bioStatus');
-        if (bioStatus) bioStatus.textContent = 'CORE: [HOT MIC ARMED]';
-      };
-
-      recognition.onresult = (e) => {
-        if (isSpeaking) return;
-
-        const transcript = e.results[e.results.length - 1][0].transcript.trim();
-
-        if (/jarvis/i.test(transcript)) {
-          const cleanedQuery = transcript.replace(/jarvis/gi, '').trim();
-          userInput.value = cleanedQuery || transcript;
-          sendPrompt();
-        } else {
-          userInput.value = transcript;
-          sendPrompt();
-        }
-      };
-
-      recognition.onend = () => {
-        if (!isSpeaking && liveMicEnabled) {
-          scheduleRestart(1000);
-        }
-      };
-
-      recognition.onerror = (e) => {
-        if (e.error === 'no-speech') {
-          scheduleRestart(1200);
-        } else if (e.error !== 'aborted') {
-          console.warn("Speech recognition warning:", e.error);
-        }
-      };
-
-      scheduleRestart(500);
-    }
-
-    function scheduleRestart(delay = 1000) {
-      if (!liveMicEnabled || isSpeaking) return;
-      if (restartTimer) clearTimeout(restartTimer);
-
-      restartTimer = setTimeout(() => {
-        try {
-          if (recognition) recognition.start();
-        } catch (err) {}
-      }, delay);
-    }
-
-    function toggleVoice() {
-      liveMicEnabled = !liveMicEnabled;
-      if (liveMicEnabled) {
-        scheduleRestart(300);
-        if (micBtn) {
-          micBtn.classList.add('listening');
-          micBtn.textContent = 'HOT MIC: LIVE';
-        }
-      } else {
-        if (restartTimer) clearTimeout(restartTimer);
-        if (recognition) recognition.abort();
-        if (micBtn) {
-          micBtn.classList.remove('listening');
-          micBtn.textContent = 'MIC MUTED';
-        }
-      }
-    }
-
+    // --- 6. Prompt Parser & Ollama Pipeline ---
     async function sendPrompt() {
       const feed = document.getElementById('chat-feed');
       const text = userInput.value.trim();
@@ -758,7 +673,6 @@
       detectClient();
       initSynapseBrain();
       initCamera();
-      initLiveMicrophone();
     });
   </script>
 </body>
