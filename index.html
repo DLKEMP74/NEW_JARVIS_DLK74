@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>J.A.R.V.I.S. DLK74 // NEURAL INTERFACE</title>
+  <style>
+    :root {
+      --neon-cyan: #00f0ff;
+      --panel-bg: rgba(6, 18, 30, 0.85);
+      --border-cyan: rgba(0, 240, 255, 0.35);
+      --glow: 0 0 12px rgba(0, 240, 255, 0.45);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: radial-gradient(circle at center, #071524 0%, #02070d 100%);
+      color: var(--neon-cyan);
+      font-family: 'Courier New', Courier, monospace;
+      height: 100vh;
+      overflow: hidden;
+      display: grid;
+      grid-template-rows: 60px 1fr 40px;
+      padding: 12px;
+      gap: 12px;
+    }
+    header, footer {
+      border: 1px solid var(--border-cyan);
+      background: var(--panel-bg);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 20px;
+      box-shadow: var(--glow);
+    }
+    .hud-title { font-size: 1.3rem; letter-spacing: 4px; font-weight: bold; }
+    .status-badge { font-size: 0.85rem; letter-spacing: 1px; }
+
+    main {
+      display: grid;
+      grid-template-columns: 280px 1fr 280px;
+      gap: 12px;
+      height: 100%;
+      min-height: 0;
+    }
+    .panel {
+      border: 1px solid var(--border-cyan);
+      background: var(--panel-bg);
+      box-shadow: var(--glow);
+      padding: 15px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      overflow: hidden;
+    }
+    .panel-header {
+      font-size: 0.8rem;
+      letter-spacing: 2px;
+      border-bottom: 1px solid var(--border-cyan);
+      padding-bottom: 4px;
+      text-transform: uppercase;
+    }
+    .stat-box { font-size: 0.85rem; line-height: 1.6; }
+    .stat-val { color: #fff; font-weight: bold; }
+
+    /* Central Chat Console */
+    #chat-feed {
+      flex: 1;
+      overflow-y: auto;
+      border: 1px solid rgba(0, 240, 255, 0.15);
+      background: rgba(2, 8, 15, 0.6);
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      font-size: 0.9rem;
+    }
+    .msg { padding: 8px 12px; border-radius: 4px; max-width: 85%; }
+    .msg.user {
+      align-self: flex-end;
+      background: rgba(0, 240, 255, 0.1);
+      border: 1px solid var(--border-cyan);
+    }
+    .msg.ai {
+      align-self: flex-start;
+      background: rgba(255, 255, 255, 0.05);
+      border-left: 2px solid var(--neon-cyan);
+    }
+
+    .input-bar {
+      display: flex;
+      gap: 8px;
+    }
+    input {
+      flex: 1;
+      background: rgba(0, 240, 255, 0.05);
+      border: 1px solid var(--border-cyan);
+      color: var(--neon-cyan);
+      padding: 10px;
+      font-family: inherit;
+    }
+    input:focus { outline: none; box-shadow: var(--glow); }
+    button {
+      background: rgba(0, 240, 255, 0.2);
+      border: 1px solid var(--neon-cyan);
+      color: #fff;
+      padding: 0 16px;
+      cursor: pointer;
+      font-family: inherit;
+      font-weight: bold;
+    }
+    button:hover { background: var(--neon-cyan); color: #000; }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="hud-title">J.A.R.V.I.S. DLK74 // HUD</div>
+    <div class="status-badge">CORE: [ONLINE] // SECURE LINK ESTABLISHED</div>
+  </header>
+
+  <main>
+    <div class="panel">
+      <div class="panel-header">System Diagnostics</div>
+      <div class="stat-box">
+        <div>CORE TEMP: <span class="stat-val">42.8°C</span></div>
+        <div>POWER DRAW: <span class="stat-val">18.4 W</span></div>
+        <div>GPU/VPU: <span class="stat-val">INTEL UHD 630</span></div>
+        <div>RAM ALLOC: <span class="stat-val">32.0 GB ACTIVE</span></div>
+      </div>
+      <div class="panel-header">Storage Drives</div>
+      <div class="stat-box">
+        <div>NVMe_01 (OS): <span class="stat-val">ONLINE</span></div>
+        <div>NVMe_02 (MODELS): <span class="stat-val">1TB MOUNTED</span></div>
+        <div>SATA_03 (MEMORY): <span class="stat-val">1TB READY</span></div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-header">Active Neural Stream // Ollama Llama3</div>
+      <div id="chat-feed">
+        <div class="msg ai">SYSTEM READY. Neural link established with local Ollama engine.</div>
+      </div>
+      <div class="input-bar">
+        <input type="text" id="userInput" placeholder="Issue directive..." onkeydown="if(event.key==='Enter') sendPrompt()"/>
+        <button onclick="sendPrompt()">TRANSMIT</button>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-header">Network Status</div>
+      <div class="stat-box">
+        <div>LOCAL IP: <span class="stat-val">192.168.1.X</span></div>
+        <div>API PORT: <span class="stat-val">11434 (OLLAMA)</span></div>
+        <div>LATENCY: <span class="stat-val">4ms (LAN)</span></div>
+        <div>SECURITY: <span class="stat-val">ISOLATED ENCLAVE</span></div>
+      </div>
+    </div>
+  </main>
+
+  <footer>
+    <div>NODE IDENTIFIER: DLK74-SERVER-01</div>
+    <div>DIRECT INFERENCE CONSOLE</div>
+  </footer>
+
+  <script>
+    async function sendPrompt() {
+      const input = document.getElementById('userInput');
+      const feed = document.getElementById('chat-feed');
+      const text = input.value.trim();
+      if (!text) return;
+
+      feed.innerHTML += `<div class="msg user">${text}</div>`;
+      input.value = '';
+      feed.scrollTop = feed.scrollHeight;
+
+      const aiMsg = document.createElement('div');
+      aiMsg.className = 'msg ai';
+      aiMsg.textContent = 'Processing neural response...';
+      feed.appendChild(aiMsg);
+      feed.scrollTop = feed.scrollHeight;
+
+      try {
+        const response = await fetch('http://localhost:11434/api/generate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ model: 'llama3:8b', prompt: text, stream: false })
+        });
+        const data = await response.json();
+        aiMsg.textContent = data.response;
+      } catch (err) {
+        aiMsg.textContent = '[ERROR]: Unable to reach Ollama daemon on port 11434. Ensure container is online.';
+      }
+      feed.scrollTop = feed.scrollHeight;
+    }
+  </script>
+</body>
+</html>
