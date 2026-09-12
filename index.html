@@ -79,7 +79,7 @@
       justify-content: space-between;
     }
 
-    /* Hidden background video engine */
+    /* Hidden background video pipeline for facial recognition */
     #hidden-camera-container {
       position: absolute;
       width: 320px;
@@ -130,9 +130,7 @@
     .stat-box { font-size: 0.8rem; line-height: 1.5; }
     .stat-val { color: #fff; font-weight: bold; }
 
-    /* ======================================================== */
-    /* THE STARK JARVIS CORE & EXPANDABLE SYNAPSE STAGE        */
-    /* ======================================================== */
+    /* The Stark JARVIS Core & Dynamic Synapse Stage */
     .core-stage {
       position: relative;
       width: 100%;
@@ -145,7 +143,6 @@
       overflow: hidden;
     }
 
-    /* Authentic Stark Concentric Gyroscopic Rings */
     .jarvis-reactor {
       position: absolute;
       width: 210px;
@@ -199,7 +196,6 @@
       50% { transform: scale(1.08); opacity: 1; box-shadow: 0 0 25px #00f0ff; }
     }
 
-    /* Three.js Neural Synapse Brain Canvas (Overlay Engine) */
     #brain-canvas {
       position: absolute;
       top: 0; left: 0;
@@ -332,7 +328,6 @@
       <div class="core-stage" id="coreContainer">
         <div class="mode-indicator" id="modeBadge">MODE: JARVIS ARC CORE</div>
         
-        <!-- Authentic Stark Gyroscopic Core -->
         <div class="jarvis-reactor" id="starkReactor">
           <div class="radial-spokes"></div>
           <div class="ring-layer ring-1"></div>
@@ -341,7 +336,6 @@
           <div class="ring-core-disc"></div>
         </div>
 
-        <!-- Hidden/Expandable Synapse Brain -->
         <canvas id="brain-canvas"></canvas>
       </div>
 
@@ -351,7 +345,7 @@
 
       <div class="input-bar">
         <input type="text" id="userInput" placeholder="Ask directive or 'show connections'..." onkeydown="if(event.key==='Enter') sendPrompt()"/>
-        <button id="micBtn" onclick="toggleVoice()">LISTEN</button>
+        <button id="micBtn" onclick="toggleVoice()">HOT MIC: LIVE</button>
         <button onclick="sendPrompt()">TRANSMIT</button>
       </div>
     </div>
@@ -384,7 +378,7 @@
   <script>
     // --- 1. Three.js Synaptic Connection Engine ---
     let scene, camera, renderer, brainPointCloud, synapseLines;
-    let targetBrainScale = 0.001; // Hidden in standby
+    let targetBrainScale = 0.001;
     let currentBrainScale = 0.001;
     let showingConnections = false;
 
@@ -438,7 +432,6 @@
       brainPointCloud.scale.set(0.001, 0.001, 0.001);
       scene.add(brainPointCloud);
 
-      // Dynamic Synapse Connection Lines
       const lineGeo = new THREE.BufferGeometry();
       const linePos = [];
       for (let j = 0; j < 120; j++) {
@@ -563,9 +556,15 @@
       }, 250);
     }
 
-    // --- 5. Mobile-Unlocked Speech Synthesis Engine ---
+    // --- 5 & 6. Always-On Live Mic, Mobile Unlocked Speech Engine & Dispatcher ---
+    let recognition = null;
+    let isSpeaking = false;
+    let liveMicEnabled = true;
     let audioUnlocked = false;
     let pendingGreeting = null;
+
+    const micBtn = document.getElementById('micBtn');
+    const userInput = document.getElementById('userInput');
 
     function primeVoices() {
       if ('speechSynthesis' in window) {
@@ -592,6 +591,8 @@
         pendingGreeting = null;
       }
 
+      restartListening();
+
       window.removeEventListener('touchstart', unlockAudio);
       window.removeEventListener('pointerdown', unlockAudio);
       window.removeEventListener('click', unlockAudio);
@@ -609,6 +610,10 @@
         return;
       }
 
+      if (recognition) {
+        try { recognition.abort(); } catch(e) {}
+      }
+
       window.speechSynthesis.cancel();
       const utterance = new SpeechSynthesisUtterance(text);
       utterance.rate = 1.05;
@@ -618,38 +623,101 @@
       const ukVoice = voices.find(v => v.lang === 'en-GB' || v.lang === 'en_GB');
       if (ukVoice) utterance.voice = ukVoice;
 
-      utterance.onstart = () => triggerActiveDashboard(true);
-      utterance.onend = () => triggerActiveDashboard(false);
+      utterance.onstart = () => {
+        isSpeaking = true;
+        triggerActiveDashboard(true);
+      };
+
+      utterance.onend = () => {
+        isSpeaking = false;
+        triggerActiveDashboard(false);
+        restartListening();
+      };
+
+      utterance.onerror = () => {
+        isSpeaking = false;
+        triggerActiveDashboard(false);
+        restartListening();
+      };
+
       window.speechSynthesis.speak(utterance);
     }
 
-    let recognition = null, isListening = false;
-    const micBtn = document.getElementById('micBtn');
-    const userInput = document.getElementById('userInput');
+    function initLiveMicrophone() {
+      if (!('webkitSpeechRecognition' in window || 'SpeechRecognition' in window)) {
+        if (micBtn) micBtn.textContent = 'NO MIC API';
+        return;
+      }
 
-    if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
       const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
       recognition = new SR();
+      recognition.continuous = true;
+      recognition.interimResults = false;
       recognition.lang = 'en-GB';
-      recognition.onresult = (e) => { userInput.value = e.results[0][0].transcript; sendPrompt(); };
-      recognition.onend = () => { isListening = false; micBtn.classList.remove('listening'); micBtn.textContent = 'LISTEN'; triggerActiveDashboard(false); };
+
+      recognition.onstart = () => {
+        if (micBtn) {
+          micBtn.classList.add('listening');
+          micBtn.textContent = 'HOT MIC: LIVE';
+        }
+        const bioStatus = document.getElementById('bioStatus');
+        if (bioStatus) bioStatus.textContent = 'CORE: [HOT MIC ARMED]';
+      };
+
+      recognition.onresult = (e) => {
+        if (isSpeaking) return;
+
+        const transcript = e.results[e.results.length - 1][0].transcript.trim();
+
+        if (/jarvis/i.test(transcript)) {
+          const cleanedQuery = transcript.replace(/jarvis/gi, '').trim();
+          userInput.value = cleanedQuery || transcript;
+          sendPrompt();
+        } else {
+          userInput.value = transcript;
+          sendPrompt();
+        }
+      };
+
+      recognition.onend = () => {
+        if (!isSpeaking && liveMicEnabled) {
+          restartListening();
+        }
+      };
+
+      recognition.onerror = (e) => {
+        if (e.error !== 'no-speech' && e.error !== 'aborted') {
+          console.warn("Speech recognition warning:", e.error);
+        }
+      };
+
+      restartListening();
+    }
+
+    function restartListening() {
+      if (!recognition || isSpeaking || !liveMicEnabled) return;
+      try {
+        recognition.start();
+      } catch (err) {}
     }
 
     function toggleVoice() {
-      if (!recognition) return;
-      if (isListening) {
-        recognition.stop();
+      liveMicEnabled = !liveMicEnabled;
+      if (liveMicEnabled) {
+        restartListening();
+        if (micBtn) {
+          micBtn.classList.add('listening');
+          micBtn.textContent = 'HOT MIC: LIVE';
+        }
       } else {
-        userInput.value = '';
-        recognition.start();
-        isListening = true;
-        micBtn.classList.add('listening');
-        micBtn.textContent = 'LISTENING...';
-        triggerActiveDashboard(true);
+        if (recognition) recognition.abort();
+        if (micBtn) {
+          micBtn.classList.remove('listening');
+          micBtn.textContent = 'MIC MUTED';
+        }
       }
     }
 
-    // --- 6. Prompt Parser & Ollama Pipeline ---
     async function sendPrompt() {
       const feed = document.getElementById('chat-feed');
       const text = userInput.value.trim();
@@ -682,6 +750,7 @@
         speakText(data.response);
       } catch (err) {
         aiMsg.textContent = '[ERROR]: Ollama daemon offline on port 11434.';
+        triggerActiveDashboard(false);
       }
       feed.scrollTop = feed.scrollHeight;
     }
@@ -690,6 +759,7 @@
       detectClient();
       initSynapseBrain();
       initCamera();
+      initLiveMicrophone();
     });
   </script>
 </body>
