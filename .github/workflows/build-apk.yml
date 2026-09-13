@@ -16,7 +16,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
 
       - name: Setup Java JDK
         uses: actions/setup-java@v4
@@ -24,13 +24,20 @@ jobs:
           distribution: 'zulu'
           java-version: '17'
 
+      - name: Stage Web Assets
+        run: |
+          mkdir -p www
+          cp index.html www/
+          # Copy extra static assets if they exist in repo root
+          cp -r *.png *.jpg *.jpeg *.json www/ 2>/dev/null || true
+
       - name: Install Dependencies
         run: npm install
 
       - name: Add Android Platform
         run: |
           npx cap add android
-          # Inject permissions for background mic, camera, and keeping screen awake
+          # Inject background audio, wake lock, and camera permissions
           sed -i '/<\/manifest>/i \    <uses-permission android:name="android.permission.RECORD_AUDIO" />\n    <uses-permission android:name="android.permission.CAMERA" />\n    <uses-permission android:name="android.permission.WAKE_LOCK" />\n    <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />' android/app/src/main/AndroidManifest.xml
           npx cap sync android
 
