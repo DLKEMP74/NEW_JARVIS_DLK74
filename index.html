@@ -30,14 +30,14 @@
       overflow-x: hidden;
     }
 
-    /* Mobile Audio Unlock Banner */
+    /* Mobile Web Touch Modal (Hidden automatically when running as native app) */
     #audio-unlocker {
       position: fixed;
       top: 0; left: 0; width: 100%; height: 100%;
-      background: rgba(2, 7, 13, 0.85);
+      background: rgba(2, 7, 13, 0.88);
       backdrop-filter: blur(8px);
       z-index: 9999;
-      display: flex;
+      display: none;
       flex-direction: column;
       justify-content: center;
       align-items: center;
@@ -64,6 +64,7 @@
       padding: 8px 16px;
       box-shadow: var(--glow);
       flex-shrink: 0;
+      transition: all 0.3s ease;
     }
     .hud-title { font-size: 1.1rem; letter-spacing: 3px; font-weight: bold; }
     .status-badge { font-size: 0.8rem; letter-spacing: 1px; }
@@ -85,6 +86,7 @@
       flex-direction: column;
       gap: 10px;
       overflow: hidden;
+      transition: border-color 0.3s ease, box-shadow 0.3s ease;
     }
     .panel.active-state {
       border-color: var(--neon-bright);
@@ -263,7 +265,7 @@
 </head>
 <body>
 
-  <!-- Touch Gesture Unlock Modal for Mobile Browsers -->
+  <!-- Touch modal only for standard mobile browsers -->
   <div id="audio-unlocker" onclick="initializeAudioMatrix()">
     <div class="unlock-box">
       <h2>J.A.R.V.I.S. DLK74</h2>
@@ -328,7 +330,7 @@
 
       <div class="input-bar">
         <input type="text" id="userInput" placeholder="Issue directive..." onkeydown="if(event.key==='Enter') sendPrompt()"/>
-        <button id="micBtn" onclick="toggleVoice()">LISTEN</button>
+        <button id="micBtn" onclick="toggleVoice()">HOT MIC: LIVE</button>
         <button onclick="sendPrompt()">TRANSMIT</button>
       </div>
     </div>
@@ -343,9 +345,9 @@
       </div>
 
       <div class="stat-box">
-        <div>CLIENT OS: <span class="stat-val" id="clientOs">DETECTING...</span></div>
-        <div>BROWSER: <span class="stat-val" id="clientBrowser">DETECTING...</span></div>
-        <div>AUDIO MATRIX: <span class="stat-val" id="audioState">LOCKED</span></div>
+        <div>RUNTIME MODE: <span class="stat-val" id="runtimeProfile">INITIALIZING...</span></div>
+        <div>MIC CHANNEL: <span class="stat-val" id="micChannelMode">AUTO</span></div>
+        <div>AUDIO MATRIX: <span class="stat-val" id="audioState">ACTIVE</span></div>
         <div>SERVER NODE: <span class="stat-val">DLK74-SERVER-01</span></div>
       </div>
     </div>
@@ -357,34 +359,53 @@
   </footer>
 
   <script>
-    const isMobileDevice = /android|iPad|iPhone|iPod/i.test(navigator.userAgent);
+    // --- 1. Distinct Runtime Mode Profiler ---
+    const isCapacitorApp = Boolean(
+      window.Capacitor?.isNativePlatform?.() || 
+      window.location.protocol === 'capacitor:' || 
+      window.location.hostname === 'localhost' && /android/i.test(navigator.userAgent)
+    );
+    const isMobileBrowser = /android|iPad|iPhone|iPod/i.test(navigator.userAgent) && !isCapacitorApp;
+    const isDesktop = !isCapacitorApp && !isMobileBrowser;
 
-    // --- 1. Audio Unlock & Speech Pipeline ---
-    let audioMatrixArmed = false;
+    let runtimeProfile = "DESKTOP_HOTMIC";
+    if (isCapacitorApp) runtimeProfile = "STANDALONE_APP";
+    else if (isMobileBrowser) runtimeProfile = "MOBILE_WEB";
+
+    document.getElementById('runtimeProfile').textContent = runtimeProfile;
+
+    // --- 2. Audio Pipeline & Speech Output ---
+    let audioMatrixArmed = isDesktop || isCapacitorApp; // Always armed on desktop and inside native app
+    let isSpeaking = false;
     let verifiedOnce = false;
+
+    if (isMobileBrowser && !audioMatrixArmed) {
+      document.getElementById('audio-unlocker').style.display = 'flex';
+      document.getElementById('audioState').textContent = 'LOCKED (AWAITING TAP)';
+    } else {
+      document.getElementById('audioState').textContent = 'UNRESTRICTED (LIVE)';
+    }
 
     function initializeAudioMatrix() {
       audioMatrixArmed = true;
       document.getElementById('audio-unlocker').style.display = 'none';
-      document.getElementById('audioState').textContent = 'ARMED (ACTIVE)';
+      document.getElementById('audioState').textContent = 'UNRESTRICTED (LIVE)';
 
       if ('speechSynthesis' in window) {
         window.speechSynthesis.cancel();
-        const unlockUtterance = new SpeechSynthesisUtterance('Audio matrix online.');
-        unlockUtterance.rate = 1.05;
-        unlockUtterance.lang = 'en-GB';
-        window.speechSynthesis.speak(unlockUtterance);
-      }
-
-      if (isMobileDevice) {
-        document.getElementById('micBtn').textContent = 'LISTEN';
-      } else {
-        initDesktopHotMic();
+        const unlock = new SpeechSynthesisUtterance('Audio matrix online.');
+        unlock.rate = 1.05;
+        unlock.lang = 'en-GB';
+        window.speechSynthesis.speak(unlock);
       }
     }
 
     function speakText(text) {
       if (!('speechSynthesis' in window) || !audioMatrixArmed) return;
+
+      if (recognition && (isDesktop || isCapacitorApp)) {
+        try { recognition.abort(); } catch(e) {}
+      }
 
       window.speechSynthesis.cancel();
       const utterance = new SpeechSynthesisUtterance(text);
@@ -395,39 +416,77 @@
       const ukVoice = voices.find(v => v.lang === 'en-GB' || v.lang === 'en_GB');
       if (ukVoice) utterance.voice = ukVoice;
 
-      utterance.onstart = () => triggerActiveDashboard(true);
-      utterance.onend = () => triggerActiveDashboard(false);
-      utterance.onerror = () => triggerActiveDashboard(false);
+      utterance.onstart = () => {
+        isSpeaking = true;
+        triggerActiveDashboard(true);
+      };
+
+      utterance.onend = () => {
+        isSpeaking = false;
+        triggerActiveDashboard(false);
+        if (isDesktop || isCapacitorApp) scheduleHotMicRestart(300);
+      };
+
+      utterance.onerror = () => {
+        isSpeaking = false;
+        triggerActiveDashboard(false);
+        if (isDesktop || isCapacitorApp) scheduleHotMicRestart(300);
+      };
 
       window.speechSynthesis.speak(utterance);
     }
 
-    // Force voice preload
     if ('speechSynthesis' in window) {
       window.speechSynthesis.getVoices();
       window.speechSynthesis.onvoiceschanged = () => window.speechSynthesis.getVoices();
     }
 
-    // --- 2. Controlled Microphone Engine (No Mobile Chime Loop) ---
+    // --- 3. Dedicated Microphone Engine (App vs Desktop vs Mobile Web) ---
     let recognition = null;
-    let isListening = false;
+    let hotMicActive = false;
+    let restartTimer = null;
     const micBtn = document.getElementById('micBtn');
     const userInput = document.getElementById('userInput');
 
-    if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+    function configureMicrophoneProfile() {
+      if (!('webkitSpeechRecognition' in window || 'SpeechRecognition' in window)) {
+        micBtn.textContent = 'NO MIC API';
+        return;
+      }
+
       const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
       recognition = new SR();
       recognition.lang = 'en-GB';
-      recognition.continuous = !isMobileDevice; // Only continuous on desktop to stop Android chime
+
+      if (isCapacitorApp) {
+        // App Setting: Hot-Mic armed without browser sandbox limits
+        document.getElementById('micChannelMode').textContent = 'APP_CONTINUOUS';
+        recognition.continuous = true;
+        recognition.interimResults = false;
+        startHotMic();
+      } else if (isDesktop) {
+        // Desktop Setting: Hot-Mic armed
+        document.getElementById('micChannelMode').textContent = 'DESKTOP_CONTINUOUS';
+        recognition.continuous = true;
+        recognition.interimResults = false;
+        startHotMic();
+      } else {
+        // Mobile Browser Setting: Manual toggle to prevent repetitive chimes
+        document.getElementById('micChannelMode').textContent = 'MOBILE_PUSH_TO_TALK';
+        recognition.continuous = false;
+        micBtn.classList.remove('listening');
+        micBtn.textContent = 'LISTEN';
+      }
 
       recognition.onstart = () => {
-        isListening = true;
         micBtn.classList.add('listening');
-        micBtn.textContent = 'LISTENING...';
+        micBtn.textContent = (isCapacitorApp || isDesktop) ? 'HOT MIC: LIVE' : 'LISTENING...';
+        document.getElementById('bioStatus').textContent = 'CORE: [MIC ACTIVE]';
         triggerActiveDashboard(true);
       };
 
       recognition.onresult = (e) => {
+        if (isSpeaking) return;
         const transcript = e.results[e.results.length - 1][0].transcript.trim();
         const cleaned = transcript.replace(/jarvis/gi, '').trim();
         userInput.value = cleaned || transcript;
@@ -435,42 +494,56 @@
       };
 
       recognition.onend = () => {
-        isListening = false;
-        micBtn.classList.remove('listening');
-        micBtn.textContent = 'LISTEN';
         triggerActiveDashboard(false);
-
-        // Only auto-restart on desktop
-        if (!isMobileDevice && audioMatrixArmed) {
-          try { recognition.start(); } catch(e) {}
+        if (!isSpeaking && hotMicActive && (isCapacitorApp || isDesktop)) {
+          scheduleHotMicRestart(400);
+        } else {
+          micBtn.classList.remove('listening');
+          micBtn.textContent = 'LISTEN';
         }
       };
 
-      recognition.onerror = () => {
-        isListening = false;
-        micBtn.classList.remove('listening');
-        micBtn.textContent = 'LISTEN';
+      recognition.onerror = (e) => {
         triggerActiveDashboard(false);
+        if (e.error === 'no-speech' && hotMicActive && (isCapacitorApp || isDesktop)) {
+          scheduleHotMicRestart(500);
+        }
       };
     }
 
-    function initDesktopHotMic() {
-      if (!isMobileDevice && recognition) {
+    function startHotMic() {
+      hotMicActive = true;
+      scheduleHotMicRestart(100);
+    }
+
+    function scheduleHotMicRestart(delay = 300) {
+      if (!hotMicActive || isSpeaking) return;
+      if (restartTimer) clearTimeout(restartTimer);
+      restartTimer = setTimeout(() => {
         try { recognition.start(); } catch(e) {}
-      }
+      }, delay);
     }
 
     function toggleVoice() {
       if (!recognition) return;
-      if (isListening) {
-        recognition.stop();
+
+      if (isCapacitorApp || isDesktop) {
+        hotMicActive = !hotMicActive;
+        if (hotMicActive) {
+          startHotMic();
+        } else {
+          if (restartTimer) clearTimeout(restartTimer);
+          recognition.abort();
+          micBtn.classList.remove('listening');
+          micBtn.textContent = 'HOT MIC: MUTED';
+        }
       } else {
-        userInput.value = '';
+        // Mobile browser manual tap
         try { recognition.start(); } catch(e) {}
       }
     }
 
-    // --- 3. Three.js Synaptic Brain ---
+    // --- 4. 3D Holographic Stage ---
     let scene, camera, renderer, brainPointCloud, synapseLines;
     let targetBrainScale = 0.001, currentBrainScale = 0.001;
 
@@ -558,7 +631,7 @@
       }, duration);
     }
 
-    // --- 4. Dashboard Visualizer & Telemetry ---
+    // --- 5. Visualizer & Diagnostics ---
     let eqInterval = null;
     function triggerActiveDashboard(active = true) {
       const panels = document.querySelectorAll('.panel');
@@ -585,13 +658,7 @@
       }
     }
 
-    function detectClient() {
-      const ua = navigator.userAgent;
-      document.getElementById('clientOs').textContent = /android/i.test(ua) ? "Android" : /iPad|iPhone|iPod/.test(ua) ? "iOS" : /Windows/i.test(ua) ? "Windows" : "Linux";
-      document.getElementById('clientBrowser').textContent = /chrome/i.test(ua) ? "Chrome" : /safari/i.test(ua) ? "Safari" : "Edge";
-    }
-
-    // --- 5. Biometric Vision Loop with Robust Greeting ---
+    // --- 6. Biometric Vision Loop ---
     const video = document.getElementById('webcam');
     let modelsLoaded = false;
 
@@ -631,7 +698,7 @@
       }, 300);
     }
 
-    // --- 6. Prompt Parser & Ollama Pipeline ---
+    // --- 7. Ollama REST API Pipeline ---
     async function sendPrompt() {
       const feed = document.getElementById('chat-feed');
       const text = userInput.value.trim();
@@ -670,9 +737,9 @@
     }
 
     window.addEventListener('DOMContentLoaded', () => {
-      detectClient();
       initSynapseBrain();
       initCamera();
+      configureMicrophoneProfile();
     });
   </script>
 </body>
