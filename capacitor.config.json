@@ -1,0 +1,10 @@
+{
+  "appId": "com.dlk74.jarvis",
+  "appName": "JARVIS DLK74",
+  "webDir": ".",
+  "bundledWebRuntime": false,
+  "server": {
+    "androidScheme": "https",
+    "cleartext": true
+  }
+}
