@@ -21,16 +21,16 @@
       background: radial-gradient(circle at center, #071524 0%, #02070d 100%);
       color: var(--neon-cyan);
       font-family: 'Courier New', Courier, monospace;
-      min-height: 100vh;
-      min-height: 100dvh;
+      height: 100vh;
+      height: 100dvh;
       display: flex;
       flex-direction: column;
       padding: 10px;
       gap: 10px;
-      overflow-x: hidden;
+      overflow: hidden; /* Locks desktop viewport from stretching */
     }
 
-    /* Mobile Web Touch Modal (Hidden automatically when running as native app) */
+    /* Mobile Web Touch Modal (Hidden automatically in native app) */
     #audio-unlocker {
       position: fixed;
       top: 0; left: 0; width: 100%; height: 100%;
@@ -74,7 +74,8 @@
       grid-template-columns: 290px 1fr 280px;
       gap: 10px;
       flex: 1;
-      min-height: 0;
+      min-height: 0; /* Prevents flex child grid from blowing out height */
+      overflow: hidden;
     }
 
     .panel {
@@ -86,6 +87,7 @@
       flex-direction: column;
       gap: 10px;
       overflow: hidden;
+      min-height: 0; /* Critical: Allows inner flex items to calculate scroll heights */
       transition: border-color 0.3s ease, box-shadow 0.3s ease;
     }
     .panel.active-state {
@@ -100,6 +102,7 @@
       text-transform: uppercase;
       display: flex;
       justify-content: space-between;
+      flex-shrink: 0;
     }
 
     #hidden-camera-container {
@@ -123,6 +126,7 @@
       align-items: center;
       overflow: hidden;
       box-shadow: inset 0 0 15px rgba(0, 240, 255, 0.15);
+      flex-shrink: 0;
     }
     .android-svg {
       width: 85px;
@@ -145,25 +149,26 @@
     .android-avatar-box.verified .android-svg { filter: drop-shadow(0 0 12px #00f0ff); }
     .android-avatar-box.verified .eye-node { fill: #ffffff !important; filter: drop-shadow(0 0 6px #00f0ff); }
 
-    .stat-box { font-size: 0.8rem; line-height: 1.5; }
+    .stat-box { font-size: 0.8rem; line-height: 1.5; overflow-y: auto; }
     .stat-val { color: #fff; font-weight: bold; }
 
     .core-stage {
       position: relative;
       width: 100%;
-      height: 240px;
+      height: 220px;
       border: 1px solid rgba(0, 240, 255, 0.35);
       background: radial-gradient(circle, rgba(0, 240, 255, 0.1) 0%, rgba(2, 8, 15, 0.85) 80%);
       display: flex;
       justify-content: center;
       align-items: center;
       overflow: hidden;
+      flex-shrink: 0;
     }
 
     .jarvis-reactor {
       position: absolute;
-      width: 210px;
-      height: 210px;
+      width: 190px;
+      height: 190px;
       display: flex;
       justify-content: center;
       align-items: center;
@@ -171,23 +176,23 @@
     }
     .ring-layer { position: absolute; border-radius: 50%; }
     .ring-1 {
-      width: 210px; height: 210px;
+      width: 190px; height: 190px;
       border: 1px dashed rgba(0, 240, 255, 0.35);
       animation: spinCW 30s linear infinite;
     }
     .ring-2 {
-      width: 175px; height: 175px;
+      width: 155px; height: 155px;
       border: 2px solid rgba(0, 240, 255, 0.6);
       border-top-color: transparent; border-bottom-color: transparent;
       animation: spinCCW 12s linear infinite;
     }
     .ring-3 {
-      width: 140px; height: 140px;
+      width: 125px; height: 125px;
       border: 1px dotted rgba(0, 240, 255, 0.8);
       animation: spinCW 8s linear infinite;
     }
     .ring-core-disc {
-      width: 80px; height: 80px;
+      width: 70px; height: 70px;
       border: 2px solid var(--neon-cyan);
       background: radial-gradient(circle, rgba(0, 240, 255, 0.5) 0%, rgba(0, 240, 255, 0.05) 70%);
       box-shadow: 0 0 15px var(--neon-cyan), inset 0 0 15px var(--neon-cyan);
@@ -220,18 +225,39 @@
       padding: 3px 6px; border: 1px solid var(--border-cyan); z-index: 4;
     }
 
-    .audio-matrix { display: flex; gap: 4px; height: 22px; align-items: flex-end; }
+    .audio-matrix { display: flex; gap: 4px; height: 22px; align-items: flex-end; flex-shrink: 0; }
     .audio-bar { flex: 1; background: rgba(0, 240, 255, 0.25); height: 3px; border-radius: 1px; transition: height 0.08s ease; }
     .audio-bar.active { background: var(--neon-cyan); box-shadow: 0 0 6px var(--neon-cyan); }
 
+    /* Pinned Conversation Console with Custom Scrollbar */
     #chat-feed {
-      flex: 1; min-height: 180px; overflow-y: auto;
+      flex: 1;
+      min-height: 0; /* Prevents overflow from expanding the parent */
+      overflow-y: scroll; /* Forces scrollbar behavior */
       border: 1px solid rgba(0, 240, 255, 0.15);
       background: rgba(2, 8, 15, 0.6);
-      padding: 10px; display: flex; flex-direction: column;
-      gap: 10px; font-size: 0.85rem;
+      padding: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      font-size: 0.85rem;
+      scrollbar-width: thin;
+      scrollbar-color: var(--neon-cyan) rgba(2, 8, 15, 0.8);
     }
-    .msg { padding: 8px 12px; border-radius: 4px; max-width: 85%; }
+    #chat-feed::-webkit-scrollbar {
+      width: 6px;
+    }
+    #chat-feed::-webkit-scrollbar-track {
+      background: rgba(2, 8, 15, 0.8);
+      border: 1px solid rgba(0, 240, 255, 0.1);
+    }
+    #chat-feed::-webkit-scrollbar-thumb {
+      background: var(--neon-cyan);
+      border-radius: 2px;
+      box-shadow: 0 0 6px var(--neon-cyan);
+    }
+
+    .msg { padding: 8px 12px; border-radius: 4px; max-width: 85%; word-break: break-word; }
     .msg.user { align-self: flex-end; background: rgba(0, 240, 255, 0.1); border: 1px solid var(--border-cyan); }
     .msg.ai { align-self: flex-start; background: rgba(255, 255, 255, 0.05); border-left: 2px solid var(--neon-cyan); }
 
@@ -248,14 +274,15 @@
       border: 1px solid var(--neon-cyan);
       color: #fff; padding: 0 14px; cursor: pointer;
       font-family: inherit; font-weight: bold;
+      white-space: nowrap;
     }
     button:hover { background: var(--neon-cyan); color: #000; }
     button.listening { background: #ff0055; border-color: #ff0055; color: #fff; }
 
     @media (max-width: 900px) {
       body { height: auto; min-height: 100dvh; overflow-y: auto; }
-      main { display: flex; flex-direction: column; height: auto; }
-      .panel { width: 100%; height: auto; }
+      main { display: flex; flex-direction: column; height: auto; overflow: visible; }
+      .panel { width: 100%; height: auto; min-height: initial; }
       .core-stage { height: 210px; }
       .jarvis-reactor { transform: scale(0.85); }
       #chat-feed { min-height: 240px; max-height: 350px; }
@@ -265,7 +292,6 @@
 </head>
 <body>
 
-  <!-- Touch modal only for standard mobile browsers -->
   <div id="audio-unlocker" onclick="initializeAudioMatrix()">
     <div class="unlock-box">
       <h2>J.A.R.V.I.S. DLK74</h2>
@@ -359,7 +385,6 @@
   </footer>
 
   <script>
-    // --- 1. Distinct Runtime Mode Profiler ---
     const isCapacitorApp = Boolean(
       window.Capacitor?.isNativePlatform?.() || 
       window.location.protocol === 'capacitor:' || 
@@ -374,8 +399,7 @@
 
     document.getElementById('runtimeProfile').textContent = runtimeProfile;
 
-    // --- 2. Audio Pipeline & Speech Output ---
-    let audioMatrixArmed = isDesktop || isCapacitorApp; // Always armed on desktop and inside native app
+    let audioMatrixArmed = isDesktop || isCapacitorApp;
     let isSpeaking = false;
     let verifiedOnce = false;
 
@@ -441,7 +465,6 @@
       window.speechSynthesis.onvoiceschanged = () => window.speechSynthesis.getVoices();
     }
 
-    // --- 3. Dedicated Microphone Engine (App vs Desktop vs Mobile Web) ---
     let recognition = null;
     let hotMicActive = false;
     let restartTimer = null;
@@ -459,19 +482,16 @@
       recognition.lang = 'en-GB';
 
       if (isCapacitorApp) {
-        // App Setting: Hot-Mic armed without browser sandbox limits
         document.getElementById('micChannelMode').textContent = 'APP_CONTINUOUS';
         recognition.continuous = true;
         recognition.interimResults = false;
         startHotMic();
       } else if (isDesktop) {
-        // Desktop Setting: Hot-Mic armed
         document.getElementById('micChannelMode').textContent = 'DESKTOP_CONTINUOUS';
         recognition.continuous = true;
         recognition.interimResults = false;
         startHotMic();
       } else {
-        // Mobile Browser Setting: Manual toggle to prevent repetitive chimes
         document.getElementById('micChannelMode').textContent = 'MOBILE_PUSH_TO_TALK';
         recognition.continuous = false;
         micBtn.classList.remove('listening');
@@ -538,12 +558,10 @@
           micBtn.textContent = 'HOT MIC: MUTED';
         }
       } else {
-        // Mobile browser manual tap
         try { recognition.start(); } catch(e) {}
       }
     }
 
-    // --- 4. 3D Holographic Stage ---
     let scene, camera, renderer, brainPointCloud, synapseLines;
     let targetBrainScale = 0.001, currentBrainScale = 0.001;
 
@@ -631,7 +649,6 @@
       }, duration);
     }
 
-    // --- 5. Visualizer & Diagnostics ---
     let eqInterval = null;
     function triggerActiveDashboard(active = true) {
       const panels = document.querySelectorAll('.panel');
@@ -658,7 +675,6 @@
       }
     }
 
-    // --- 6. Biometric Vision Loop ---
     const video = document.getElementById('webcam');
     let modelsLoaded = false;
 
@@ -698,7 +714,6 @@
       }, 300);
     }
 
-    // --- 7. Ollama REST API Pipeline ---
     async function sendPrompt() {
       const feed = document.getElementById('chat-feed');
       const text = userInput.value.trim();
