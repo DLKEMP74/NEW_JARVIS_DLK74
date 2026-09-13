@@ -3,7 +3,7 @@
   "appName": "JARVIS DLK74",
   "webDir": "www",
   "server": {
-    "androidScheme": "https",
+    "url": "https://dlkemp74.github.io/NEW_JARVIS_DLK74/",
     "cleartext": true
   }
 }
