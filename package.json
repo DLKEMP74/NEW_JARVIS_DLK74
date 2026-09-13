@@ -1,0 +1,14 @@
+{
+  "name": "jarvis-dlk74",
+  "version": "1.0.0",
+  "description": "J.A.R.V.I.S. DLK74 Standalone Client",
+  "main": "index.html",
+  "scripts": {
+    "build": "echo 'Web assets ready'"
+  },
+  "dependencies": {
+    "@capacitor/android": "^6.0.0",
+    "@capacitor/cli": "^6.0.0",
+    "@capacitor/core": "^6.0.0"
+  }
+}
