@@ -27,10 +27,9 @@
       flex-direction: column;
       padding: 10px;
       gap: 10px;
-      overflow: hidden; /* Locks desktop viewport from stretching */
+      overflow: hidden;
     }
 
-    /* Mobile Web Touch Modal (Hidden automatically in native app) */
     #audio-unlocker {
       position: fixed;
       top: 0; left: 0; width: 100%; height: 100%;
@@ -74,7 +73,7 @@
       grid-template-columns: 290px 1fr 280px;
       gap: 10px;
       flex: 1;
-      min-height: 0; /* Prevents flex child grid from blowing out height */
+      min-height: 0;
       overflow: hidden;
     }
 
@@ -87,7 +86,7 @@
       flex-direction: column;
       gap: 10px;
       overflow: hidden;
-      min-height: 0; /* Critical: Allows inner flex items to calculate scroll heights */
+      min-height: 0;
       transition: border-color 0.3s ease, box-shadow 0.3s ease;
     }
     .panel.active-state {
@@ -229,11 +228,10 @@
     .audio-bar { flex: 1; background: rgba(0, 240, 255, 0.25); height: 3px; border-radius: 1px; transition: height 0.08s ease; }
     .audio-bar.active { background: var(--neon-cyan); box-shadow: 0 0 6px var(--neon-cyan); }
 
-    /* Pinned Conversation Console with Custom Scrollbar */
     #chat-feed {
       flex: 1;
-      min-height: 0; /* Prevents overflow from expanding the parent */
-      overflow-y: scroll; /* Forces scrollbar behavior */
+      min-height: 0;
+      overflow-y: scroll;
       border: 1px solid rgba(0, 240, 255, 0.15);
       background: rgba(2, 8, 15, 0.6);
       padding: 10px;
@@ -244,18 +242,9 @@
       scrollbar-width: thin;
       scrollbar-color: var(--neon-cyan) rgba(2, 8, 15, 0.8);
     }
-    #chat-feed::-webkit-scrollbar {
-      width: 6px;
-    }
-    #chat-feed::-webkit-scrollbar-track {
-      background: rgba(2, 8, 15, 0.8);
-      border: 1px solid rgba(0, 240, 255, 0.1);
-    }
-    #chat-feed::-webkit-scrollbar-thumb {
-      background: var(--neon-cyan);
-      border-radius: 2px;
-      box-shadow: 0 0 6px var(--neon-cyan);
-    }
+    #chat-feed::-webkit-scrollbar { width: 6px; }
+    #chat-feed::-webkit-scrollbar-track { background: rgba(2, 8, 15, 0.8); border: 1px solid rgba(0, 240, 255, 0.1); }
+    #chat-feed::-webkit-scrollbar-thumb { background: var(--neon-cyan); border-radius: 2px; box-shadow: 0 0 6px var(--neon-cyan); }
 
     .msg { padding: 8px 12px; border-radius: 4px; max-width: 85%; word-break: break-word; }
     .msg.user { align-self: flex-end; background: rgba(0, 240, 255, 0.1); border: 1px solid var(--border-cyan); }
@@ -295,7 +284,7 @@
   <div id="audio-unlocker" onclick="initializeAudioMatrix()">
     <div class="unlock-box">
       <h2>J.A.R.V.I.S. DLK74</h2>
-      <p>[ TAP TO ENGAGE NEURAL MATRIX ]</p>
+      <p>[ TAP TO ENGAGE AUDIO MATRIX ]</p>
     </div>
   </div>
 
@@ -356,7 +345,7 @@
 
       <div class="input-bar">
         <input type="text" id="userInput" placeholder="Issue directive..." onkeydown="if(event.key==='Enter') sendPrompt()"/>
-        <button id="micBtn" onclick="toggleVoice()">HOT MIC: LIVE</button>
+        <button id="micBtn" onclick="toggleVoice()">LISTEN</button>
         <button onclick="sendPrompt()">TRANSMIT</button>
       </div>
     </div>
@@ -372,7 +361,7 @@
 
       <div class="stat-box">
         <div>RUNTIME MODE: <span class="stat-val" id="runtimeProfile">INITIALIZING...</span></div>
-        <div>MIC CHANNEL: <span class="stat-val" id="micChannelMode">AUTO</span></div>
+        <div>MIC CHANNEL: <span class="stat-val" id="micChannelMode">DIRECTIVE_STABLE</span></div>
         <div>AUDIO MATRIX: <span class="stat-val" id="audioState">ACTIVE</span></div>
         <div>SERVER NODE: <span class="stat-val">DLK74-SERVER-01</span></div>
       </div>
@@ -385,27 +374,22 @@
   </footer>
 
   <script>
-    const isCapacitorApp = Boolean(
-      window.Capacitor?.isNativePlatform?.() || 
-      window.location.protocol === 'capacitor:' || 
-      window.location.hostname === 'localhost' && /android/i.test(navigator.userAgent)
-    );
-    const isMobileBrowser = /android|iPad|iPhone|iPod/i.test(navigator.userAgent) && !isCapacitorApp;
-    const isDesktop = !isCapacitorApp && !isMobileBrowser;
+    // --- 1. Client Environment Detection ---
+    const isAndroid = /android/i.test(navigator.userAgent);
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+    const isMobileDevice = isAndroid || isIOS;
 
-    let runtimeProfile = "DESKTOP_HOTMIC";
-    if (isCapacitorApp) runtimeProfile = "STANDALONE_APP";
-    else if (isMobileBrowser) runtimeProfile = "MOBILE_WEB";
-
+    let runtimeProfile = isMobileDevice ? "ANDROID_STABLE" : "DESKTOP_HOTMIC";
     document.getElementById('runtimeProfile').textContent = runtimeProfile;
 
-    let audioMatrixArmed = isDesktop || isCapacitorApp;
+    // --- 2. Audio Pipeline & Speech Output ---
+    let audioMatrixArmed = !isMobileDevice; // Pre-armed on desktop; requires initial tap on mobile
     let isSpeaking = false;
     let verifiedOnce = false;
 
-    if (isMobileBrowser && !audioMatrixArmed) {
+    if (isMobileDevice && !audioMatrixArmed) {
       document.getElementById('audio-unlocker').style.display = 'flex';
-      document.getElementById('audioState').textContent = 'LOCKED (AWAITING TAP)';
+      document.getElementById('audioState').textContent = 'LOCKED (TAP TO UNLOCK)';
     } else {
       document.getElementById('audioState').textContent = 'UNRESTRICTED (LIVE)';
     }
@@ -427,7 +411,7 @@
     function speakText(text) {
       if (!('speechSynthesis' in window) || !audioMatrixArmed) return;
 
-      if (recognition && (isDesktop || isCapacitorApp)) {
+      if (recognition && !isMobileDevice) {
         try { recognition.abort(); } catch(e) {}
       }
 
@@ -448,13 +432,14 @@
       utterance.onend = () => {
         isSpeaking = false;
         triggerActiveDashboard(false);
-        if (isDesktop || isCapacitorApp) scheduleHotMicRestart(300);
+        // Only desktop auto-resumes listening
+        if (!isMobileDevice) scheduleDesktopRestart(300);
       };
 
       utterance.onerror = () => {
         isSpeaking = false;
         triggerActiveDashboard(false);
-        if (isDesktop || isCapacitorApp) scheduleHotMicRestart(300);
+        if (!isMobileDevice) scheduleDesktopRestart(300);
       };
 
       window.speechSynthesis.speak(utterance);
@@ -465,13 +450,14 @@
       window.speechSynthesis.onvoiceschanged = () => window.speechSynthesis.getVoices();
     }
 
+    // --- 3. Anti-Chime Microphone Pipeline ---
     let recognition = null;
-    let hotMicActive = false;
-    let restartTimer = null;
+    let isListening = false;
+    let desktopTimer = null;
     const micBtn = document.getElementById('micBtn');
     const userInput = document.getElementById('userInput');
 
-    function configureMicrophoneProfile() {
+    function configureMicrophone() {
       if (!('webkitSpeechRecognition' in window || 'SpeechRecognition' in window)) {
         micBtn.textContent = 'NO MIC API';
         return;
@@ -481,32 +467,30 @@
       recognition = new SR();
       recognition.lang = 'en-GB';
 
-      if (isCapacitorApp) {
-        document.getElementById('micChannelMode').textContent = 'APP_CONTINUOUS';
-        recognition.continuous = true;
-        recognition.interimResults = false;
-        startHotMic();
-      } else if (isDesktop) {
-        document.getElementById('micChannelMode').textContent = 'DESKTOP_CONTINUOUS';
-        recognition.continuous = true;
-        recognition.interimResults = false;
-        startHotMic();
-      } else {
-        document.getElementById('micChannelMode').textContent = 'MOBILE_PUSH_TO_TALK';
+      if (isMobileDevice) {
+        // STRICT MOBILE/APP RULE: Single-session only. NEVER loop restart.
         recognition.continuous = false;
-        micBtn.classList.remove('listening');
+        recognition.interimResults = false;
+        document.getElementById('micChannelMode').textContent = 'SINGLE_DIRECTIVE (NO_BLEEP)';
         micBtn.textContent = 'LISTEN';
+      } else {
+        // Desktop: Ambient Hot Mic
+        recognition.continuous = true;
+        recognition.interimResults = false;
+        document.getElementById('micChannelMode').textContent = 'DESKTOP_HOTMIC';
+        micBtn.textContent = 'HOT MIC: LIVE';
+        startDesktopHotMic();
       }
 
       recognition.onstart = () => {
+        isListening = true;
         micBtn.classList.add('listening');
-        micBtn.textContent = (isCapacitorApp || isDesktop) ? 'HOT MIC: LIVE' : 'LISTENING...';
+        micBtn.textContent = isMobileDevice ? 'LISTENING...' : 'HOT MIC: LIVE';
         document.getElementById('bioStatus').textContent = 'CORE: [MIC ACTIVE]';
         triggerActiveDashboard(true);
       };
 
       recognition.onresult = (e) => {
-        if (isSpeaking) return;
         const transcript = e.results[e.results.length - 1][0].transcript.trim();
         const cleaned = transcript.replace(/jarvis/gi, '').trim();
         userInput.value = cleaned || transcript;
@@ -514,32 +498,39 @@
       };
 
       recognition.onend = () => {
+        isListening = false;
         triggerActiveDashboard(false);
-        if (!isSpeaking && hotMicActive && (isCapacitorApp || isDesktop)) {
-          scheduleHotMicRestart(400);
-        } else {
+
+        if (isMobileDevice) {
+          // Stay completely dormant on mobile until user taps. Zero reconnect chimes.
+          micBtn.classList.remove('listening');
+          micBtn.textContent = 'LISTEN';
+          document.getElementById('bioStatus').textContent = 'CORE: [STANDBY]';
+        } else if (!isSpeaking) {
+          scheduleDesktopRestart(300);
+        }
+      };
+
+      recognition.onerror = () => {
+        isListening = false;
+        triggerActiveDashboard(false);
+        if (isMobileDevice) {
           micBtn.classList.remove('listening');
           micBtn.textContent = 'LISTEN';
         }
       };
-
-      recognition.onerror = (e) => {
-        triggerActiveDashboard(false);
-        if (e.error === 'no-speech' && hotMicActive && (isCapacitorApp || isDesktop)) {
-          scheduleHotMicRestart(500);
-        }
-      };
     }
 
-    function startHotMic() {
-      hotMicActive = true;
-      scheduleHotMicRestart(100);
+    function startDesktopHotMic() {
+      if (!isMobileDevice) {
+        scheduleDesktopRestart(100);
+      }
     }
 
-    function scheduleHotMicRestart(delay = 300) {
-      if (!hotMicActive || isSpeaking) return;
-      if (restartTimer) clearTimeout(restartTimer);
-      restartTimer = setTimeout(() => {
+    function scheduleDesktopRestart(delay = 300) {
+      if (isMobileDevice || isSpeaking) return;
+      if (desktopTimer) clearTimeout(desktopTimer);
+      desktopTimer = setTimeout(() => {
         try { recognition.start(); } catch(e) {}
       }, delay);
     }
@@ -547,21 +538,27 @@
     function toggleVoice() {
       if (!recognition) return;
 
-      if (isCapacitorApp || isDesktop) {
-        hotMicActive = !hotMicActive;
-        if (hotMicActive) {
-          startHotMic();
+      if (isMobileDevice) {
+        if (isListening) {
+          recognition.stop();
         } else {
-          if (restartTimer) clearTimeout(restartTimer);
+          userInput.value = '';
+          try { recognition.start(); } catch(e) {}
+        }
+      } else {
+        // Desktop toggle
+        if (isListening) {
+          if (desktopTimer) clearTimeout(desktopTimer);
           recognition.abort();
           micBtn.classList.remove('listening');
           micBtn.textContent = 'HOT MIC: MUTED';
+        } else {
+          startDesktopHotMic();
         }
-      } else {
-        try { recognition.start(); } catch(e) {}
       }
     }
 
+    // --- 4. 3D Holographic Stage ---
     let scene, camera, renderer, brainPointCloud, synapseLines;
     let targetBrainScale = 0.001, currentBrainScale = 0.001;
 
@@ -649,6 +646,7 @@
       }, duration);
     }
 
+    // --- 5. Visualizer & Telemetry ---
     let eqInterval = null;
     function triggerActiveDashboard(active = true) {
       const panels = document.querySelectorAll('.panel');
@@ -675,6 +673,7 @@
       }
     }
 
+    // --- 6. Biometric Vision Loop ---
     const video = document.getElementById('webcam');
     let modelsLoaded = false;
 
@@ -714,6 +713,7 @@
       }, 300);
     }
 
+    // --- 7. Ollama REST API Pipeline ---
     async function sendPrompt() {
       const feed = document.getElementById('chat-feed');
       const text = userInput.value.trim();
@@ -754,7 +754,7 @@
     window.addEventListener('DOMContentLoaded', () => {
       initSynapseBrain();
       initCamera();
-      configureMicrophoneProfile();
+      configureMicrophone();
     });
   </script>
 </body>
