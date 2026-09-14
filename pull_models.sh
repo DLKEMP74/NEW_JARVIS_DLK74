@@ -1,26 +1,27 @@
-#!/usr/bin/env bash
-set -e
+#!/bin/bash
+# ==============================================================================
+# J.A.R.V.I.S. DLK74 // MODEL HARVEST SCRIPT
+# Downloads base, vision/embed, and Hermes 3 function-calling agent brains
+# Targets: /mnt/agent_storage via Ollama container
+# ==============================================================================
 
-echo "=== Pulling Foundational AI Models into Drive 2 ==="
+echo "[+] Initializing model harvest into agent storage..."
 
-# Wait until Ollama engine container is healthy and responding
-echo "[*] Checking Ollama engine status..."
-until docker exec jarvis-engine ollama list > /dev/null 2>&1; do
-    echo "Waiting for jarvis-engine container to initialize..."
-    sleep 3
-done
+# 1. Base conversational LLM
+echo "[+] Pulling Llama 3 (8B)..."
+docker exec -it jarvis-ollama ollama pull llama3:8b
 
-# 1. Primary Reasoning & General Instruction Model (~4.9 GB)
-echo "[+] Pulling Llama 3 (8B) instruction model..."
-docker exec -it jarvis-engine ollama pull llama3:8b
+# 2. Compact high-speed reasoning model
+echo "[+] Pulling Llama 3.2 (3B)..."
+docker exec -it jarvis-ollama ollama pull llama3.2:3b
 
-# 2. Fast Low-Latency / Agent Model (~2.0 GB)
-echo "[+] Pulling Llama 3.2 (3B) lightweight model..."
-docker exec -it jarvis-engine ollama pull llama3.2:3b
+# 3. Hermes 3 (Primary Agent & Function-Calling Engine)
+echo "[+] Pulling Nous Hermes 3 (8B - Tool & Agent Specialist)..."
+docker exec -it jarvis-ollama ollama pull hermes3:8b
 
-# 3. Vector Embedding Model for Local Memory & RAG (~274 MB)
-echo "[+] Pulling Nomic Embed Text model..."
-docker exec -it jarvis-engine ollama pull nomic-embed-text
+# 4. Contextual vector embeddings for RAG & Open WebUI document memory
+echo "[+] Pulling Nomic Embed Text..."
+docker exec -it jarvis-ollama ollama pull nomic-embed-text
 
-echo "=== All Foundation Models Downloaded Successfully ==="
-docker exec jarvis-engine ollama list
+echo "[✓] All target model weights verified in /mnt/agent_storage."
+docker exec -it jarvis-ollama ollama list
