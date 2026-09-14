@@ -1,40 +1,37 @@
+version: '3.8'
+
 services:
-  # 1. Custom Sci-Fi HUD Dashboard
   jarvis-hud:
     image: nginx:alpine
     container_name: jarvis-hud
-    restart: unless-stopped
     ports:
       - "8080:80"
     volumes:
       - ./index.html:/usr/share/nginx/html/index.html:ro
+    restart: unless-stopped
 
-  # 2. The AI Brain (Executes models)
   ollama:
     image: ollama/ollama:latest
-    container_name: jarvis-engine
-    restart: unless-stopped
+    container_name: jarvis-ollama
     ports:
       - "11434:11434"
-    environment:
-      # Allows your custom HUD browser page to query Ollama directly
-      - OLLAMA_ORIGINS=*
     volumes:
-      # Maps model storage directly to your Engine Drive
-      - /mnt/agent_storage/models:/root/.ollama
+      # Model weights saved directly to Drive 2 NVMe
+      - /mnt/agent_storage/ollama_models:/root/.ollama
+    restart: unless-stopped
 
-  # 3. The Standard AI Interface & Vector Storage
   open-webui:
     image: ghcr.io/open-webui/open-webui:main
-    container_name: jarvis-ui
-    restart: unless-stopped
+    container_name: jarvis-webui
     ports:
       - "3000:8080"
     environment:
       - OLLAMA_BASE_URL=http://ollama:11434
-      - WEBUI_AUTH=false
     volumes:
-      # Maps persistent chat history and vectors to your Memory Drive
-      - /mnt/agent_memory/webui_data:/app/backend/data
+      # Context, DB, and RAG data saved to Drive 3 SATA
+      - /mnt/agent_memory/open-webui-data:/app/backend/data
+      # Direct mount of your Obsidian Markdown Vault
+      - /mnt/agent_memory/vault:/app/backend/data/vault
     depends_on:
       - ollama
+    restart: unless-stopped
